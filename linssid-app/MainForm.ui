@@ -469,6 +469,7 @@
     <addaction name="actionFrequency"/>
     <addaction name="actionQuality"/>
     <addaction name="actionSignal"/>
+    <addaction name="actionLoad"/>
     <addaction name="actionBW"/>
     <addaction name="actionVendor"/>
     <addaction name="actionType"/>
@@ -611,6 +612,17 @@
    </property>
    <property name="text">
     <string>Si&amp;gnal</string>
+   </property>
+  </action>
+  <action name="actionLoad">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Channel Load</string>
    </property>
   </action>
   <action name="actionBW">

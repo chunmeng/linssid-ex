@@ -8,7 +8,7 @@
 #ifndef CUSTOM_H
 #define	CUSTOM_H
 
-#define LINSSIDVERSION "3.6"
+#define LINSSIDVERSION "3.6-ext"
 #define LINSSIDPREFSVER "3.3"
 #define LINSSIDDATALOGVER "2.8"
 #define DATAWANTED QEvent::User + 1
@@ -16,7 +16,7 @@
 #define NUMBER_OF_COLORS 13
 #define MAX_SAMPLES 100
 #define TIME_PLOT_SCALE 100
-#define MAX_TABLE_COLS 19 // as of version 2.3
+#define MAX_TABLE_COLS 20 // as of version 3.6-ext
 #define VENDOR_FILE_NAME "/usr/share/linssid/oui.datc"
 #define PREFS_FILE_NAME ".linssid.prefs"
 #define LOG_DATA_FILE_NAME "LinSSID.datalog"
@@ -30,7 +30,7 @@ enum wlDriver {
 // and the tableHeader variable of the Qwt table
 enum colTitle {
     PLOT, SSID, MAC, CHANNEL, MODE, SECURITY, PRIVACY,
-    CIPHER, FREQUENCY, QUALITY, SIGNAL, BW, MINSIGNAL, MAXSIGNAL, CENCHAN,
+    CIPHER, FREQUENCY, QUALITY, SIGNAL, LOAD, BW, MINSIGNAL, MAXSIGNAL, CENCHAN,
     FIRST_SEEN, LAST_SEEN, VENDOR, PROTOCOL, TYPE // TYPE not yet impl
 };
 

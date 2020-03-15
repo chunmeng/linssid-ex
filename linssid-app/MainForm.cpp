@@ -75,6 +75,7 @@ struct MainForm::cellData {
     string protocol; // b,g,n,ac
     int quality; // per microsoft definition, derived from signal
     int signal; // try to get dBm
+    int load = -1; // bss load in % (-1 as not reported by AP)
     int minSignal; // lowest seen
     int maxSignal; // highest seen
     int BW; // max BW in any protocol 20 or 40 or 80 or 160 MHz
@@ -246,6 +247,7 @@ MainForm::MainForm() {
     connect(MainForm::mainFormWidget.actionFrequency, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionQuality, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionSignal, SIGNAL(changed()), this, SLOT(reDrawTable()));
+    connect(MainForm::mainFormWidget.actionLoad, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionBW, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionMin_Signal, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionMax_Signal, SIGNAL(changed()), this, SLOT(reDrawTable()));
@@ -316,6 +318,7 @@ void MainForm::initColtoAction() {
     MainForm::colToQAction[FREQUENCY] = MainForm::mainFormWidget.actionFrequency;
     MainForm::colToQAction[QUALITY] = MainForm::mainFormWidget.actionQuality;
     MainForm::colToQAction[SIGNAL] = MainForm::mainFormWidget.actionSignal;
+    MainForm::colToQAction[LOAD] = MainForm::mainFormWidget.actionLoad;
     MainForm::colToQAction[BW] = MainForm::mainFormWidget.actionBW;
     MainForm::colToQAction[MINSIGNAL] = MainForm::mainFormWidget.actionMin_Signal;
     MainForm::colToQAction[MAXSIGNAL] = MainForm::mainFormWidget.actionMax_Signal;
@@ -349,6 +352,7 @@ void MainForm::loadVendorDb() {
     MainForm::vendor = new MainForm::vendorStruct[MainForm::numVendors];
     int vRecNo = 0;
     getline(vendorFile, tempString); // clear the end of line above
+    // @TODO: Binary search this...
     while (getline(vendorFile, tempString)) {
         MainForm::vendor[vRecNo].ID = strtol(tempString.substr(0,9).c_str(), nullptr, 16);
         MainForm::vendor[vRecNo].blockMode = tempString[9];
@@ -822,7 +826,7 @@ void MainForm::drawTable() {
 }; */
     MainForm::mainFormWidget.mainTableWidget->setHorizontalHeaderLabels(
             QString("Plot|SSID|MAC|Channel|Mode|Security|Privacy|Cipher|Frequency\
-|Quality|Signal|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
+|Quality|Signal|Load|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
     setVisibleCols();
     MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->setSectionsMovable(true);
     MainForm::mainFormWidget.mainTableWidget->horizontalHeader()
@@ -854,6 +858,8 @@ void MainForm::setVisibleCols() {
             !(MainForm::mainFormWidget.actionQuality->isChecked()));
     MainForm::mainFormWidget.mainTableWidget->setColumnHidden(SIGNAL,
             !(MainForm::mainFormWidget.actionSignal->isChecked()));
+    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(LOAD,
+            !(MainForm::mainFormWidget.actionLoad->isChecked()));
     MainForm::mainFormWidget.mainTableWidget->setColumnHidden(BW,
             !(MainForm::mainFormWidget.actionBW->isChecked()));
     MainForm::mainFormWidget.mainTableWidget->setColumnHidden(MINSIGNAL,
@@ -910,6 +916,9 @@ void MainForm::fillTable() {
         MainForm::cellDataRay[row].pTableItem[SIGNAL]->
                 setData(Qt::DisplayRole, MainForm::cellDataRay[row].signal);
         MainForm::cellDataRay[row].pTableItem[SIGNAL]->setTextAlignment(Qt::AlignCenter);
+        MainForm::cellDataRay[row].pTableItem[LOAD]->
+                setData(Qt::DisplayRole, MainForm::cellDataRay[row].load);
+        MainForm::cellDataRay[row].pTableItem[LOAD]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[BW]->
                 setData(Qt::DisplayRole, MainForm::cellDataRay[row].BW);
         MainForm::cellDataRay[row].pTableItem[BW]->setTextAlignment(Qt::AlignCenter);
@@ -1251,6 +1260,13 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
             boost::regex_constants::icase))) { pageBlock = BT_RSN;
     } else if (boost::regex_match(tl, sm, boost::regex(".*?BSS Load: *(.*)",
             boost::regex_constants::icase))) { pageBlock = BT_BSS_LOAD;
+    } else if (pageBlock == BT_BSS_LOAD && boost::regex_match(tl, sm, boost::regex("^.*?channel util.*?:.*?([0-9]+)/([0-9]+).*",
+            boost::regex_constants::icase))) {
+            int x = atoi(string(sm[1]).c_str());
+            int y = atoi(string(sm[2]).c_str());
+            if (y > 0) {
+                MainForm::cellDataRay[tbi].load = (int)(x * 100 / y);
+            }
     } else if (boost::regex_match(tl, sm, boost::regex("[^V]*HT operation: *(.*)",
             boost::regex_constants::icase))) { pageBlock = BT_HT_OPERATION;
     } else if (boost::regex_match(tl, sm, boost::regex(".*?Extended capabilities: *(.*)",
@@ -1309,6 +1325,7 @@ void MainForm::doLogData() {
                 << MainForm::cellDataRay[tbi].frequency << "\t"
                 << MainForm::cellDataRay[tbi].quality << "\t"
                 << MainForm::cellDataRay[tbi].signal << "\t"
+                << MainForm::cellDataRay[tbi].load << "\t"
                 << MainForm::cellDataRay[tbi].BW << "\t"
                 << MainForm::cellDataRay[tbi].minSignal << "\t"
                 << MainForm::cellDataRay[tbi].maxSignal << "\t"
