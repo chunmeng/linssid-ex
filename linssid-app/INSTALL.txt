@@ -1,0 +1,21 @@
+Building and installing LinSSID
+
+To build from source you will need the proper development environment. At minimum you will need:
+* build-essential
+* libboost-regex-dev
+* qt5-default
+* qt5-make
+* libqt5svg5-dev
+* libqt5opengl5-dev
+* qtchooser (if you already have qt4 and you want a dual development environment)
+
+To build:
+(1) Unpack the source archive.
+(2) Open a terminal window and cd to the top level of the unpacked archive where you see the file linssid.pro
+(3) Type:
+    qmake
+    make
+    sudo make install
+
+That should have compiled LinSSID, linked all, and installed LinSSID and a few of its ancillary files in the expected places in most Debian/Ubuntu and related distributions. If you're building for a different family of distributions you may need to modify the linssid-app/linssid-app.pro file to change some of the install destinations.
+

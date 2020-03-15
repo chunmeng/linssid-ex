@@ -1,0 +1,135 @@
+©2012-2018 Warren Severin wseverin@warsev.com
+This program is released under the terms of the GNU Public License (version 3).
+
+Version 3.6
+
+* Attempts to resolve 802.11s mesh network nodes to their master. If
+  otherwise not reported, marks SSID field of mesh node APs as
+  "<mesh-masterSSID>".
+
+Version 3.5
+
+* New vendor database and search scheme that now looks in ieee oui large,
+  medium, and small block databases. Previously only looked in large
+  block database because that's where 98% of all devices are found.
+* Displays SSID of attach points with no SSID as "<hidden>".
+
+Version 3.4
+* Fixes location and owner of ".linssid.prefs" and "LinSSID.datalog".
+  Instead of placed in /root and owned by root they are now placed
+  in "$HOME" and owned by "$USER" when launched with linssid-pkexec which
+  is the normal .desktop launch.
+* Fixed some wrongly addressed cosmetic icons.
+* Updated vendor data file. (Version 3.3 had some trailing characters that
+  messed up data logging.)
+* Sundry under-the-hood optimizations.
+
+Version 3.3
+* Adds selection of table font size in preferences dialog.
+
+Version 3.2
+* Now shows mark for control channel on the channel plots. Very useful
+  for making sure your control channel(s) don't overlap with the neighbors'.
+* Fixes potential memory leak with attached plots.
+
+Version 3.1
+* Big change - now requires polkit (policykit) authentication. No way
+  around this as debian/ubuntu/* has emasculated su and sudo.
+  A step backward IMHO. Now the whole app must run as root. So, all
+  of the prefs and log files are now in /root and are owned by root. And,
+  the whole app must run as root instead of just well-tested system parts.
+* Major rewrite of the synchronization between the main window and the data getter.
+* Install rewrite
+* Desktop file fix
+* Updated vendor database
+
+Version 3.0
+* Fix race condition with large number of SSID
+* Updated vendor database
+
+Version 2.9
+* Use distro-supplied version of qwt shared library.
+
+Version 2.8
+* Conversion from old linux wireless tools to nl80211 tools.
+* New information displayed - bandwidth, make and model of router (when available)
+* Updated vendor database
+
+Version 2.7
+* Hopefully fixes an occassional problem in some configurations where LinSSID hangs during
+  scan when the wifi interface is connected to an attach point
+* Updated vendor database
+
+Version 2.6:
+* Fixes a possible bug in interface detection
+* Static link to libboost-regex
+* Update vendor database
+
+Version 2.5:
+* Fixes an issue with how the zsh shell interprets command lines. Huge thanks to Alex Stelmachonak.
+
+Version 2.4:
+* Same as 2.3 code but necessary to get a i386 build through Canonical. Long story.
+
+Version 2.3:
+* Fixed issue with RTL8187SE card and driver not providing frequency resulting in LinSSID crash.
+* Renamed the column that displays WEP, WPA2, etc., to "Privacy".
+* Added column for protocol {a,b,g,n}. (Note that many drivers do not report protocol.)
+* Modified data logging format to reflect as above
+* Added buttons for immediate clear or set of plotting of all visible attach points
+* Improved response to Plot column check boxes
+* Cleaned up a few minor bugs
+* Updated vendor database
+
+Version 2.2:
+* Fixes several small bugs
+* Adds a status display line to top panel
+* Now built with QT5 and Qwt 6.1
+* Updated wifi vendor database
+
+Version 2.1:
+* Fixes issue with not finding some interfaces when they are 'up'
+    but not connected to an attach point.
+* Updated wifi vendor database
+
+Version 2.0:
+* Hopefully fixes the problem with not finding some wireless interfaces.
+
+Version 1.9:
+* Added data logging to "~/LinSSID.datalog"
+* Anti-aliased plots
+* Updated wifi vendor database
+
+Version 1.8a:
+* Minor ooopps fix in password handling
+
+Version 1.8:
+* Stability improvement build
+* - Improved odd character handling in password verification
+* - Improved handling of default values on initial install or upgrade
+* - Improved wireless port discovery
+
+Version 1.7:
+* Adds horizontal grid to plots
+* Adds a Preferences menu item under the File menu.
+* - Adjust plot scale
+* - Toggle grid lines on/off
+
+Version 1.6:
+* Attempts to fix frequent crashing with some wifi drivers. Also some cosmetic changes.
+* - Fixes problem of some drivers reporting attach points (based on MAC address) more than once per scan. (Go figure...)
+* - Fixes code problem handling recalcitrant drivers that don't want to do a scan when requested to do so.
+* Centers most text alignment in cells
+
+Version 1.5:
+* Saves window layout between sessions. Keeps ".linssid.prefs" in home folder. If things go haywire delete the prefs file.
+
+Version 1.4:
+* Imposes minimum 0.5 second "nap time" between scans so that poorly written drivers crash less.
+* Updates the UOI vendor database
+* Improves concurrency of wifi scanning and main form updating.
+
+The wireless tools that LinSSID uses require root privilege to access. If your machine has sudo, the best way to run is to launch the program and let it ask you for a password. That way it will only use root privilege to execute a few privileged system commands, but LinSSID itself will not run as a root process. The other way to run LinSSID is to launch it from a root account or with su or sudo. It will run, but in my opinion that's a bit more dangerous. One never knows what nasty bugs may be waiting to damage.
+
+Please report bugs on the discussion tab at the project web page:
+https://sourceforge.net/projects/linssid/

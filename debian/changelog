@@ -1,0 +1,213 @@
+linssid (3.6-1) bionic; urgency=low
+
+  * Attempts to resolve 802.11s mesh network nodes to their master. If
+    otherwise not reported, marks SSID field of mesh node APs as
+    "<mesh-masterSSID>".
+
+ -- Warren Severin <wseverin@warsev.com>  Sun, 24 Jun 2018 18:22:00 -0700
+ 
+ linssid (3.5-1) bionic; urgency=low
+
+  * New vendor database and search scheme that now looks in ieee oui large,
+    medium, and small block databases. Previously only looked in large
+    block database because that's where 99% of all devices are found.
+  * Displays SSID of attach points with no SSID as "<hidden>".
+
+ -- Warren Severin <wseverin@warsev.com>  Tue, 18 Jun 2018 10:40:00 -0700
+ 
+ linssid (3.4-1) bionic; urgency=low
+
+  * Fixes location and owner of ".linssid.prefs" and "LinSSID.datalog".
+    Instead of placed in /root and owned by root they are now placed
+    in "$HOME" and owned by "$USER" when launched with linssid-pkexec which
+    is the normal .desktop launch.
+  * Fixed some wrongly addressed cosmetic icons.
+  * Updated vendor data file. (Version 3.3 had some trailing characters that
+    messed up data logging.)
+  * Sundry under-the-hood optimizations.
+
+ -- Warren Severin <wseverin@warsev.com>  Fri, 15 Jun 2018 18:10:00 -0700
+ 
+ linssid (3.3-1) bionic; urgency=low
+
+  * Adds selection of table font size to prefs dialog.
+
+ -- Warren Severin <wseverin@warsev.com>  Thu, 07 Jun 2018 07:30:00 -0700
+ 
+linssid (3.2-1) bionic; urgency=low
+
+  * Now shows mark for control channel on the channel plots. Very useful
+    for making sure your control channel(s) don't overlap with the neighbors'.
+  * Fixes potential memory leak with attached plots.
+
+ -- Warren Severin <wseverin@warsev.com>  Thu, 01 Jun 2018 07:30:00 -0700
+
+linssid (3.1-1) bionic; urgency=low
+
+  * Big change - now requires polkit (policykit) authentication. No way
+    around this as debian/ubuntu/* has emasculated su and sudo.
+    A step backward IMHO. Now the whole app must run as root. So, all
+    of the prefs and log files are now in /root and are owned by root. And,
+    the whole app must run as root instead of just well-tested system parts.
+  * Major rewrite of the synchronization between the main window and the data getter.
+  * Install rewrite
+  * Desktop file fix
+  * Updated vendor database
+
+ -- Warren Severin <wseverin@warsev.com>  Sun, 27 May 2018 10:00:00 -0700
+
+linssid (3.0-1) yakkety; urgency=low
+
+  * Fix race condition with large number of SSIDs
+  * Updated vendor database
+
+ -- Warren Severin <wseverin@warsev.com>  Sun, 22 Jan 2017 19:00:00 -0700
+
+linssid (2.9-1) xenial; urgency=low
+
+  * Rewrite build code to use shared libqwt in repos.
+
+ -- Warren Severin <wseverin@warsev.com>  Sun, 11 Jan 2017 18:10 -0700
+
+linssid (2.8-1) xenial; urgency=low
+
+  * Rewrite to use nl80211 and the iw utility instead of iwlist.
+    Note that this version may not work with some systems that are
+    using a pre-3.0 kernel that doesn't support nl80211.
+    Also note that iw may change in the future and if the output format
+    of iw changes it might break some features in this version of LinSSID.
+  * Now displays bandwidth and center channel.
+
+ -- Warren Severin <wseverin@warsev.com>  Sun, 11 Sep 2016 18:00:00 -0700
+
+linssid (2.7-1) trusty; urgency=low
+
+  * Hopefully fix occassional hangs in some configs where program hangs if
+    scanning while interface connected to attach point
+  * Update vendor data file
+
+ -- Warren Severin <wseverin@warsev.com>  Fri, 01 Aug 2014 17:00:00 -0700
+
+linssid (2.6-1) trusty; urgency=low
+
+  * Fix bug in interface detection commands to system
+  * Static link to libboost_regex.a for those installing .deb on old distros
+  * Update vendor data file
+
+ -- Warren Severin <wseverin@warsev.com>  Mon, 14 Jul 2014 10:00:00 -0700
+
+linssid (2.5-1) trusty; urgency=low
+
+  * Fixes an issue with the way that the zsh shell interprets commands.
+
+ -- Warren Severin <wseverin@warsev.com>  Mon, 07 Jul 2014 20:00:00 -0700
+
+linssid (2.4-1) trusty; urgency=low
+
+  * Code same as 2.3-1 and 2.3-2. Still in a tussle with Launchpad to get a i386 build.
+
+ -- Warren Severin <wseverin@warsev.com>  Mon, 07 Jul 2014 10:00:00 -0700
+
+linssid (2.3-2) trusty; urgency=low
+
+  * Fixed issue in build process that caused failure to build in chroot i386 environment.
+
+ -- Warren Severin <wseverin@warsev.com>  Sun, 06 Jul 2014 08:00:00 -0700
+
+linssid (2.3-1) trusty; urgency=low
+
+  * Fixed issue with RTL8187SE card and driver not providing frequency resulting in LinSSID crash or hang.
+  * Renamed the column that displays WEP, WPA2, etc., to "Privacy".
+  * Added column for Protocol {a,b,g,n}. (Note that many drivers do not report protocol.)
+  * Modified data logging format to reflect as above
+  * Added buttons for immediate clear or set of plotting of all visible attach points
+  * Improved response to Plot column check boxes
+  * Cleaned up a few minor bugs
+  * Updated vendor database
+
+ -- Warren Severin <wseverin@warsev.com>  Sat, 05 Jul 2014 16:00:00 -0700
+
+linssid (2.2-1) trusty; urgency=low
+
+  * Now built with QT5
+  * Add a small status message to the top panel
+  * A couple of invisible bug fixes
+  * Updated vendor database
+
+ -- Warren Severin <wseverin@warsev.com>  Mon, 09 Jun 2014 11:01:13 -0700
+
+linssid (2.1-1) precise; urgency=low
+
+  * Fixes some interfaces not being discovered when 'up' but not
+    'connected'
+  * Updated vendor database
+
+ -- Warren Severin <wseverin@warsev.com>  Sat, 22 Jun 2013 15:15:00 -0700
+
+linssid (2.0-1) precise; urgency=low
+
+  * Fix, hopefully, for the non-discovery of some wireless interfaces.
+  * Updated vendor database
+
+ -- Warren Severin <wseverin@warsev.com>  Thu, 02 May 2013 13:49:00 -0700
+
+linssid (1.9-1) precise; urgency=low
+
+  * Features
+    - Data logging to ~/LinSSID.datalog
+    - Anti-aliased plots
+    - Updated vendor database
+
+ -- Warren Severin <wseverin@warsev.com>  Fri, 01 Feb 2013 17:47:36 -0700
+
+linssid (1.8a-1) precise; urgency=low
+
+  * Additional fix to password handling
+
+ -- Warren Severin <wseverin@warsev.com>  Mon, 07 Jan 2013 08:41:36 -0700
+
+linssid (1.8-1) precise; urgency=low
+
+  * Stability improvement build
+    - Improved odd character handling in password verification
+    - Improved initialization of default values on intial install or upgrade
+    - Improved wireless port discovery
+
+ -- Warren Severin <wseverin@warsev.com>  Sun, 06 Jan 2013 19:54:42 -0700
+
+linssid (1.7-1) precise; urgency=low
+
+  * Adds horizontal grid lines to plots
+  * Adds plot scaling
+  * Adds a minimal prefs dialog to adjust the above
+
+ -- Warren Severin <wseverin@warsev.com>  Sat, 05 Jan 2013 14:33:20 -0700
+
+linssid (1.6-1) precise; urgency=low
+
+  * Stability enhancements. Fixes for driver misbehavior. Some cosmetic changes.
+  * - Workaround for drivers that report a MAC more than once per scan
+  * - Fix code to deal with drivers that refuse to scan when asked
+  * Centers most text in cells
+
+ -- Warren Severin <wseverin@warsev.com>  Tue, 01 Jan 2013 20:12:18 -0700
+
+linssid (1.5-1) precise; urgency=low
+
+  * Saves window layout between sessions
+
+ -- Warren Severin <wseverin@warsev.com>  Mon, 31 Dec 2012 15:17:45 -0700
+
+linssid (1.4-1) precise; urgency=low
+
+  * Impose minimum wait of 0.5 seconds between scans
+  * Improve concurrency of scanning and screen updates
+  * Update OUI vendor data
+
+ -- Warren Severin <wseverin@warsev.com>  Thu, 27 Dec 2012 09:19:49 -0700
+
+linssid (1.3-1) precise; urgency=low
+
+  * Initial release
+
+ -- Warren Severin <wseverin@warsev.com>  Tue, 25 Dec 2012 15:16:40 -0700
