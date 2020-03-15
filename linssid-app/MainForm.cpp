@@ -75,7 +75,8 @@ struct MainForm::cellData {
     string protocol; // b,g,n,ac
     int quality; // per microsoft definition, derived from signal
     int signal; // try to get dBm
-    int load = -1; // bss load in % (-1 as not reported by AP)
+    int load = -1; // bss load-channel util in % (-1 as not reported by BSS)
+    int stationCount = -1; // bss station in % (-1 as not reported by BSS)
     int minSignal; // lowest seen
     int maxSignal; // highest seen
     int BW; // max BW in any protocol 20 or 40 or 80 or 160 MHz
@@ -248,6 +249,7 @@ MainForm::MainForm() {
     connect(MainForm::mainFormWidget.actionQuality, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionSignal, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionLoad, SIGNAL(changed()), this, SLOT(reDrawTable()));
+    connect(MainForm::mainFormWidget.actionStationCount, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionBW, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionMin_Signal, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionMax_Signal, SIGNAL(changed()), this, SLOT(reDrawTable()));
@@ -319,6 +321,7 @@ void MainForm::initColtoAction() {
     MainForm::colToQAction[QUALITY] = MainForm::mainFormWidget.actionQuality;
     MainForm::colToQAction[SIGNAL] = MainForm::mainFormWidget.actionSignal;
     MainForm::colToQAction[LOAD] = MainForm::mainFormWidget.actionLoad;
+    MainForm::colToQAction[STATION_COUNT] = MainForm::mainFormWidget.actionStationCount;
     MainForm::colToQAction[BW] = MainForm::mainFormWidget.actionBW;
     MainForm::colToQAction[MINSIGNAL] = MainForm::mainFormWidget.actionMin_Signal;
     MainForm::colToQAction[MAXSIGNAL] = MainForm::mainFormWidget.actionMax_Signal;
@@ -826,7 +829,7 @@ void MainForm::drawTable() {
 }; */
     MainForm::mainFormWidget.mainTableWidget->setHorizontalHeaderLabels(
             QString("Plot|SSID|MAC|Channel|Mode|Security|Privacy|Cipher|Frequency\
-|Quality|Signal|Load|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
+|Quality|Signal|Load|Station Count|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
     setVisibleCols();
     MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->setSectionsMovable(true);
     MainForm::mainFormWidget.mainTableWidget->horizontalHeader()
@@ -860,6 +863,8 @@ void MainForm::setVisibleCols() {
             !(MainForm::mainFormWidget.actionSignal->isChecked()));
     MainForm::mainFormWidget.mainTableWidget->setColumnHidden(LOAD,
             !(MainForm::mainFormWidget.actionLoad->isChecked()));
+    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(STATION_COUNT,
+            !(MainForm::mainFormWidget.actionStationCount->isChecked()));
     MainForm::mainFormWidget.mainTableWidget->setColumnHidden(BW,
             !(MainForm::mainFormWidget.actionBW->isChecked()));
     MainForm::mainFormWidget.mainTableWidget->setColumnHidden(MINSIGNAL,
@@ -919,6 +924,9 @@ void MainForm::fillTable() {
         MainForm::cellDataRay[row].pTableItem[LOAD]->
                 setData(Qt::DisplayRole, MainForm::cellDataRay[row].load);
         MainForm::cellDataRay[row].pTableItem[LOAD]->setTextAlignment(Qt::AlignCenter);
+        MainForm::cellDataRay[row].pTableItem[STATION_COUNT]->
+                setData(Qt::DisplayRole, MainForm::cellDataRay[row].stationCount);
+        MainForm::cellDataRay[row].pTableItem[STATION_COUNT]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[BW]->
                 setData(Qt::DisplayRole, MainForm::cellDataRay[row].BW);
         MainForm::cellDataRay[row].pTableItem[BW]->setTextAlignment(Qt::AlignCenter);
@@ -1267,6 +1275,9 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
             if (y > 0) {
                 MainForm::cellDataRay[tbi].load = (int)(x * 100 / y);
             }
+    } else if (pageBlock == BT_BSS_LOAD && boost::regex_match(tl, sm, boost::regex("^.*?station count:.*?([0-9]+).*",
+            boost::regex_constants::icase))) {
+                MainForm::cellDataRay[tbi].stationCount = atoi(string(sm[1]).c_str());
     } else if (boost::regex_match(tl, sm, boost::regex("[^V]*HT operation: *(.*)",
             boost::regex_constants::icase))) { pageBlock = BT_HT_OPERATION;
     } else if (boost::regex_match(tl, sm, boost::regex(".*?Extended capabilities: *(.*)",
