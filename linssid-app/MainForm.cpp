@@ -968,7 +968,6 @@ void MainForm::fillTable() {
     }
     setVisibleCols();
     MainForm::mainFormWidget.mainTableWidget->setSortingEnabled(true);
-    std::cout << __FUNCTION__ << " 5G=" << MainForm::total5GBss << ", 2.4G=" << MainForm::total2GBss << std::endl;
 }
 
 class MainForm::Chan24ScaleDraw : public QwtScaleDraw {
