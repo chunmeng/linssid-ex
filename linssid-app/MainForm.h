@@ -23,8 +23,6 @@
 #include "Custom.h"
 #include "Stats.h"
 
-using namespace std;
-
 class Getter; // forward declare
 
 class MainForm : public QMainWindow {
@@ -45,7 +43,7 @@ public:
     //    void run();
     void init();
     void loadVendorDb();
-    string findVendor(string);
+    std::string findVendor(std::string);
     void getUserID();
     void addInterfaces();
     void setInterface(int);
@@ -53,7 +51,7 @@ public:
     void writePrefsFile();
     void writePrefsBlock(sDefPref);
     void readPrefsFile();
-    string getCurrentInterface();
+    std::string getCurrentInterface();
     static const QEvent::Type DATA_READY_EVENT;
     class DataReadyEvent;
     int getReadyBlockNo();
@@ -71,12 +69,12 @@ public:
     void drawTimePlot();
     void fillPlots();
     void fillStatus();
-    void initNewCell(string, int);
-    void extractData(string, int &, int &);
+    void initNewCell(std::string, int);
+    void extractData(std::string, int &, int &);
     void doLogData();
     void writeLogDataHeader();
-    int MaxIntStr(const string&);
-    int MinIntStr(const string&);
+    int MaxIntStr(const std::string&);
+    int MinIntStr(const std::string&);
     inline void waste(int);
     void resolveMesh(int);
     // void trimRight( string& );
@@ -84,9 +82,9 @@ public:
 
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
-    static vector<cellData> cellDataRay;
+    static std::vector<cellData> cellDataRay;
     static vendorStruct* vendor;
-    static fstream logDataStream;
+    static std::fstream logDataStream;
     static int maxTableIndex;
     static int numVendors;
     static int maxVendorRecL;
@@ -95,10 +93,10 @@ public:
     static long now;
     static int logDataState;
     static bool firstScan;
-    static string wlPrivacies[3];
-    static string wlCiphers[3];
-    static string chan24Freq[15];
-    static string chan50Freq[42][2];
+    static std::string wlPrivacies[3];
+    static std::string wlCiphers[3];
+    static std::string chan24Freq[15];
+    static std::string chan50Freq[42][2];
     static QColor qColorArray[NUMBER_OF_COLORS];
     static QFont tblFnt;
     static QString fntSizes[];
