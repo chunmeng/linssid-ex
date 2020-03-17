@@ -346,17 +346,16 @@ void MainForm::initPlotGrids() {
 }
 
 void MainForm::initStatusBar() {
-    MainForm::status5GCount = new QLabel();
-    status5GCount->setText("5G: -");
-    MainForm::status2GCount = new QLabel();
-    status2GCount->setText("2.4G: -");
-    MainForm::mainFormWidget.statusbar->addPermanentWidget(status5GCount);
-    MainForm::mainFormWidget.statusbar->addPermanentWidget(status2GCount);
+    MainForm::statusCounts = new QLabel();
+    MainForm::statusCounts->setText("5G: -\t2.4G: -\tOpen: -");
+    MainForm::mainFormWidget.statusbar->addPermanentWidget(MainForm::statusCounts);
 }
 
 void MainForm::fillStatus() {
-    MainForm::status5GCount->setText("5G: " % QString::number(MainForm::total5GBss));
-    MainForm::status2GCount->setText("2.4G: " % QString::number(MainForm::total2GBss));
+    QString counts = "5G: " % QString::number(MainForm::stats.total5GBss);
+    counts += "\t2.4G: " % QString::number(MainForm::stats.total2GBss);
+    counts += "\tOpen: " % QString::number(MainForm::stats.totalOpen);
+    MainForm::statusCounts->setText(counts);
 }
 
 void MainForm::loadVendorDb() {
@@ -370,7 +369,6 @@ void MainForm::loadVendorDb() {
     MainForm::vendor = new MainForm::vendorStruct[MainForm::numVendors];
     int vRecNo = 0;
     getline(vendorFile, tempString); // clear the end of line above
-    // @TODO: Binary search this...
     while (getline(vendorFile, tempString)) {
         MainForm::vendor[vRecNo].ID = strtol(tempString.substr(0,9).c_str(), nullptr, 16);
         MainForm::vendor[vRecNo].blockMode = tempString[9];
@@ -897,8 +895,7 @@ void MainForm::setVisibleCols() {
 }
 
 void MainForm::fillTable() {
-    MainForm::total2GBss = 0;
-    MainForm::total5GBss = 0;
+    MainForm::stats.reset();
     MainForm::mainFormWidget.mainTableWidget->setFont(tblFnt);
     
     // fill in the x-y, also set each cell text alignment
@@ -912,8 +909,8 @@ void MainForm::fillTable() {
         MainForm::cellDataRay[row].pTableItem[MAC]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[CHANNEL]->
                 setData(Qt::DisplayRole, MainForm::cellDataRay[row].channel);
-                if (MainForm::cellDataRay[row].channel <= 14) MainForm::total2GBss++;
-                else MainForm::total5GBss++;
+        if (MainForm::cellDataRay[row].channel <= 14) MainForm::stats.total2GBss++;
+        else MainForm::stats.total5GBss++;
         MainForm::cellDataRay[row].pTableItem[CHANNEL]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[MODE]->
                 setText(MainForm::cellDataRay[row].mode.c_str());
@@ -924,6 +921,7 @@ void MainForm::fillTable() {
         MainForm::cellDataRay[row].pTableItem[SECURITY]->
                 setText(MainForm::cellDataRay[row].security.c_str());
         MainForm::cellDataRay[row].pTableItem[SECURITY]->setTextAlignment(Qt::AlignCenter);
+        if (MainForm::cellDataRay[row].security.empty()) MainForm::stats.totalOpen++;
         MainForm::cellDataRay[row].pTableItem[PRIVACY]->
                 setText((MainForm::cellDataRay[row].privacy).c_str());
         MainForm::cellDataRay[row].pTableItem[PRIVACY]->setTextAlignment(Qt::AlignCenter);

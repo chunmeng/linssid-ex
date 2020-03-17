@@ -21,6 +21,8 @@
 #include "ui_MainForm.h"
 #include "prefsDialog.h"
 #include "Custom.h"
+#include "Stats.h"
+
 using namespace std;
 
 class Getter; // forward declare
@@ -128,10 +130,8 @@ protected:
     void handleDataReadyEvent(const DataReadyEvent*);
 
 private:
-    QLabel *status5GCount;
-    QLabel *status2GCount;
-    int total5GBss = 0;
-    int total2GBss = 0;
+    QLabel *statusCounts;
+    Stats stats;
 };
 
 #endif	/* _MAINFORM_H */
