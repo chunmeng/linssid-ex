@@ -282,6 +282,7 @@ void MainForm::init() {
     MainForm::drawTable();
     MainForm::initPlotGrids(); // must do before reading prefs, since prefs will modify
     MainForm::initColtoAction(); // init pointers to view menu items
+    MainForm::initStatusBar();
     MainForm::readPrefsFile();
     MainForm::drawTable(); // do it again after application of prefs
     MainForm::drawChan24Plot();
@@ -342,6 +343,20 @@ void MainForm::initPlotGrids() {
     MainForm::timeGrid = new QwtPlotGrid();
     MainForm::timeGrid->enableX(false);
     MainForm::timeGrid->attach(MainForm::mainFormWidget.timePlot);
+}
+
+void MainForm::initStatusBar() {
+    MainForm::status5GCount = new QLabel();
+    status5GCount->setText("5G: -");
+    MainForm::status2GCount = new QLabel();
+    status2GCount->setText("2.4G: -");
+    MainForm::mainFormWidget.statusbar->addPermanentWidget(status5GCount);
+    MainForm::mainFormWidget.statusbar->addPermanentWidget(status2GCount);
+}
+
+void MainForm::fillStatus() {
+    MainForm::status5GCount->setText("5G: " % QString::number(MainForm::total5GBss));
+    MainForm::status2GCount->setText("2.4G: " % QString::number(MainForm::total2GBss));
 }
 
 void MainForm::loadVendorDb() {
@@ -882,7 +897,8 @@ void MainForm::setVisibleCols() {
 }
 
 void MainForm::fillTable() {
-    
+    MainForm::total2GBss = 0;
+    MainForm::total5GBss = 0;
     MainForm::mainFormWidget.mainTableWidget->setFont(tblFnt);
     
     // fill in the x-y, also set each cell text alignment
@@ -896,6 +912,8 @@ void MainForm::fillTable() {
         MainForm::cellDataRay[row].pTableItem[MAC]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[CHANNEL]->
                 setData(Qt::DisplayRole, MainForm::cellDataRay[row].channel);
+                if (MainForm::cellDataRay[row].channel <= 14) MainForm::total2GBss++;
+                else MainForm::total5GBss++;
         MainForm::cellDataRay[row].pTableItem[CHANNEL]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[MODE]->
                 setText(MainForm::cellDataRay[row].mode.c_str());
@@ -950,6 +968,7 @@ void MainForm::fillTable() {
     }
     setVisibleCols();
     MainForm::mainFormWidget.mainTableWidget->setSortingEnabled(true);
+    std::cout << __FUNCTION__ << " 5G=" << MainForm::total5GBss << ", 2.4G=" << MainForm::total2GBss << std::endl;
 }
 
 class MainForm::Chan24ScaleDraw : public QwtScaleDraw {
@@ -1397,6 +1416,7 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
             if (block >= 0) {
                 MainForm::fillTable();
                 MainForm::fillPlots();
+                MainForm::fillStatus();
                 if (MainForm::logDataState == Qt::Checked) {
                     doLogData();
                 }

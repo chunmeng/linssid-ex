@@ -63,10 +63,12 @@ public:
     class Chan5ScaleDraw;
     void initColtoAction();
     void initPlotGrids();
+    void initStatusBar();
     void drawChan24Plot();
     void drawChan5Plot();
     void drawTimePlot();
     void fillPlots();
+    void fillStatus();
     void initNewCell(string, int);
     void extractData(string, int &, int &);
     void doLogData();
@@ -124,6 +126,12 @@ protected:
     void customEvent(QEvent*); // This overrides QObject::customEvent()
     void closeEvent(QCloseEvent*); // Overides built-in closeEvent()
     void handleDataReadyEvent(const DataReadyEvent*);
+
+private:
+    QLabel *status5GCount;
+    QLabel *status2GCount;
+    int total5GBss = 0;
+    int total2GBss = 0;
 };
 
 #endif	/* _MAINFORM_H */
