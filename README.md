@@ -17,3 +17,10 @@ sudo apt-get install -y \
 	libqwt-qt5-6 \
 	libqwt-headers
 ```
+
+## UI change
+For UI layout change, consider using Qt designer
+
+```
+sudo apt-get install qttools5-dev-tools
+```
