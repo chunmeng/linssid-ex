@@ -936,10 +936,10 @@ void MainForm::fillTable() {
                 setData(Qt::DisplayRole, MainForm::cellDataRay[row].signal);
         MainForm::cellDataRay[row].pTableItem[SIGNAL]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[LOAD]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].load);
+                setText((MainForm::cellDataRay[row].load < 0) ? "-" : QString::number(MainForm::cellDataRay[row].load));
         MainForm::cellDataRay[row].pTableItem[LOAD]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[STATION_COUNT]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].stationCount);
+                setText((MainForm::cellDataRay[row].stationCount < 0) ? "-" : QString::number(MainForm::cellDataRay[row].stationCount));
         MainForm::cellDataRay[row].pTableItem[STATION_COUNT]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[BW]->
                 setData(Qt::DisplayRole, MainForm::cellDataRay[row].BW);
@@ -1351,6 +1351,7 @@ void MainForm::doLogData() {
                 << MainForm::cellDataRay[tbi].quality << "\t"
                 << MainForm::cellDataRay[tbi].signal << "\t"
                 << MainForm::cellDataRay[tbi].load << "\t"
+                << MainForm::cellDataRay[tbi].stationCount << "\t"
                 << MainForm::cellDataRay[tbi].BW << "\t"
                 << MainForm::cellDataRay[tbi].minSignal << "\t"
                 << MainForm::cellDataRay[tbi].maxSignal << "\t"
@@ -1370,7 +1371,7 @@ void MainForm::writeLogDataHeader() {
     chmod(fullLogNameCstr, 00644);
     MainForm::logDataStream << "LINSSIDDATALOGVER " << LINSSIDDATALOGVER << "\n";
     MainForm::logDataStream << "Time\tSSID\tMAC\tChannel\tMode\tProtocol\tSecurity\tPrivacy\t\
-Cipher\tFrequency\tQuality\tSignal\tBW\tMin_Sig\tMax_Sig\tCen_Chan\tFirst_Seen\tLast_Seen\tVendor\n";
+Cipher\tFrequency\tQuality\tSignal\tLoad\t\tStationCount\tBW\tMin_Sig\tMax_Sig\tCen_Chan\tFirst_Seen\tLast_Seen\tVendor\n";
 }
 
 void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
