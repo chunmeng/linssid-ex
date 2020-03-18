@@ -347,15 +347,12 @@ void MainForm::initPlotGrids() {
 
 void MainForm::initStatusBar() {
     MainForm::statusCounts = new QLabel();
-    MainForm::statusCounts->setText("5G: -\t2.4G: -\tOpen: -");
+    MainForm::statusCounts->setText(QString::fromStdString((MainForm::stats.toString())));
     MainForm::mainFormWidget.statusbar->addPermanentWidget(MainForm::statusCounts);
 }
 
 void MainForm::fillStatus() {
-    QString counts = "5G: " % QString::number(MainForm::stats.total5GBss);
-    counts += "\t2.4G: " % QString::number(MainForm::stats.total2GBss);
-    counts += "\tOpen: " % QString::number(MainForm::stats.totalOpen);
-    MainForm::statusCounts->setText(counts);
+    MainForm::statusCounts->setText(QString::fromStdString((MainForm::stats.toString())));
 }
 
 void MainForm::loadVendorDb() {
@@ -904,6 +901,7 @@ void MainForm::fillTable() {
         MainForm::cellDataRay[row].pTableItem[PLOT]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[SSID]->
                 setText(MainForm::cellDataRay[row].essid.c_str());
+        if (MainForm::cellDataRay[row].essid == "<hidden>") MainForm::stats.totalHidden++;
         MainForm::cellDataRay[row].pTableItem[MAC]->
                 setText(MainForm::cellDataRay[row].macAddr.c_str());
         MainForm::cellDataRay[row].pTableItem[MAC]->setTextAlignment(Qt::AlignCenter);
