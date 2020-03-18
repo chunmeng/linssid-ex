@@ -30,7 +30,6 @@ class MainForm : public QMainWindow {
     Q_OBJECT
 public:
 
-    struct vendorStruct;
     struct sSort;
     struct sMaingeom;
     struct sMainsplit;
