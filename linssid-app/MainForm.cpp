@@ -62,54 +62,6 @@ using namespace std;
 
 // define a few things
 
-// the cellData structure is replicated for each attach point (cell) found
-
-struct MainForm::cellData {
-    string macAddr;
-    string essid;
-    string mode; // master, managed, etc.
-    string security; // on or off
-    string privacy; // group cipher
-    string cipher; // pairwise cipher
-    int channel;
-    string frequency;
-    string protocol; // b,g,n,ac
-    int quality; // per microsoft definition, derived from signal
-    int signal; // try to get dBm
-    int load = -1; // bss load-channel util in % (-1 as not reported by BSS)
-    int stationCount = -1; // bss station in % (-1 as not reported by BSS)
-    int minSignal; // lowest seen
-    int maxSignal; // highest seen
-    int BW; // max BW in any protocol 20 or 40 or 80 or 160 MHz
-    int cenChan; // center channel in 40/80/160 MHz bandwidths
-    string vendor;
-    bool firstPlot;
-    long firstSeen;
-    long lastSeen;
-    string netType;
-    QColor color;
-    QwtPlotCurve* pBandCurve;
-    double xPlot[4];
-    double yPlot[4];
-    // see: http://www.qtcentre.org/threads/46316-Draw-a-single-point-into-a-qwt-plot
-    QwtPlotMarker* pCntlChanPlot; // to plot control channel marker
-    QwtSymbol* pChanSymbol;    
-    QwtPlotCurve* pTimeCurve;
-    QTableWidgetItem * pTableItem[MAX_TABLE_COLS];
-    History* pHistory;
-    int timesSeen; // believe it or not, some drivers report a MAC more than once per scan
-};
-
-struct MainForm::History {
-    // This structure is created to record the history of each cell. It's a ring buffer.
-    // Sample buffers are TWICE the size needed so that we can efficiently give the
-    // plotting package contiguous arrays of size MAX_SAMPLES. Each sample is entered
-    // twice: at index 0<=i<MAX_SAMPLES and again at MAX_SAMPLES <= i+MAX_SAMPLES  < (MAX_SAMPLES * 2)
-    int totalSamples; // modulo max_samples gives index into sample array
-    double sampleSec[MAX_SAMPLES * 2];
-    double signal[MAX_SAMPLES * 2];
-};
-
 struct MainForm::sSort {
     int column;
     int order;
@@ -153,7 +105,7 @@ struct MainForm::sDefPref {
 // declare some variables
 Getter* MainForm::pGetter; // a pointer to our data getter
 QThread* MainForm::pGetterThread; // a pointer to its thread
-vector<MainForm::cellData> MainForm::cellDataRay;
+vector<CellData> MainForm::cellDataRay;
 fstream MainForm::logDataStream;
 int MainForm::maxTableIndex; // holds the highest index pointer into cellData
 long MainForm::runStartTime;
@@ -1066,8 +1018,8 @@ void MainForm::resolveMesh(int tbi) {
 
 void MainForm::initNewCell(string macAddress, int tbi) {
     // Initialize a newly found cell.
-    MainForm::cellData* emptyStruct;               // C++ is really stupid
-    emptyStruct = new MainForm::cellData();        // unintuitive as heck
+    CellData* emptyStruct;               // C++ is really stupid
+    emptyStruct = new CellData();        // unintuitive as heck
     MainForm::cellDataRay.push_back(*emptyStruct); // This is the only way to
     delete emptyStruct;                            // create a new initialized element
     MainForm::cellDataRay[tbi].macAddr = macAddress; // insert MAC address

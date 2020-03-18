@@ -21,7 +21,7 @@
 #include "ui_MainForm.h"
 #include "prefsDialog.h"
 #include "Custom.h"
-#include "Stats.h"
+#include "DataStruct.h"
 #include "VendorDb.h"
 
 class Getter; // forward declare
@@ -30,8 +30,6 @@ class MainForm : public QMainWindow {
     Q_OBJECT
 public:
 
-    struct cellData;
-    struct History;
     struct vendorStruct;
     struct sSort;
     struct sMaingeom;
@@ -81,7 +79,7 @@ public:
 
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
-    static std::vector<cellData> cellDataRay;
+    static std::vector<CellData> cellDataRay;
     static std::fstream logDataStream;
     static int maxTableIndex;
     static long runStartTime;
