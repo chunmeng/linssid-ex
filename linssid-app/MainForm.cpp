@@ -280,7 +280,7 @@ void MainForm::init() {
     MainForm::drawChan24Plot();
     MainForm::drawChan5Plot();
     MainForm::drawTimePlot();
-    MainForm::vendorDb = std::unique_ptr<VendorDb>(new VendorDb());
+    MainForm::vendorDb = make_unique<VendorDb>();
 }
 // saving as comments in case ever need it again...
 // reimplemented from QApplication so we can throw exceptions in slots
