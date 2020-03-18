@@ -3,12 +3,13 @@
 #include "Custom.h"
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
 class VendorDb::Impl {
 public:
-    struct vendorStruct {
+    struct VendorStruct {
         uint64_t ID;
         char blockMode;
         string name;
@@ -25,7 +26,7 @@ private:
 private:
     int numVendors = 0;
     int maxVendorRecL = 0;
-    vendorStruct* vendor;
+    vector<VendorStruct> vendor;
 };
 
 VendorDb::Impl::Impl()
@@ -47,16 +48,14 @@ void VendorDb::Impl::loadVendorDb()
     vendorFile >> numVendors >> maxVendorRecL;
     string tempString;
     // load vendor array with ID and name
-    vendor = new vendorStruct[numVendors];
     int vRecNo = 0;
     getline(vendorFile, tempString); // clear the end of line above
     while (getline(vendorFile, tempString)) {
-        vendor[vRecNo].ID = strtol(tempString.substr(0,9).c_str(), nullptr, 16);
-        vendor[vRecNo].blockMode = tempString[9];
-        vendor[vRecNo].name = tempString.substr(10);
+        vendor.push_back({strtoul(tempString.substr(0,9).c_str(), nullptr, 16), tempString[9], tempString.substr(10)});
         vRecNo++;
     }
     vendorFile.close();
+    std::cout << "Loaded " << vendor.size() << " vendor entries" << endl;
 }
 
 std::string VendorDb::Impl::lookup(const string& mac)
