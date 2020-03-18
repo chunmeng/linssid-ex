@@ -12,6 +12,7 @@
 #include <sstream>
 #include <random>
 #include <climits>
+#include <memory>
 #include <QtCore>
 #include <QString>
 #include <QThread>
@@ -109,12 +110,6 @@ struct MainForm::History {
     double signal[MAX_SAMPLES * 2];
 };
 
-struct MainForm::vendorStruct {
-    uint64_t ID;
-    char blockMode;
-    string name;
-};
-
 struct MainForm::sSort {
     int column;
     int order;
@@ -159,11 +154,8 @@ struct MainForm::sDefPref {
 Getter* MainForm::pGetter; // a pointer to our data getter
 QThread* MainForm::pGetterThread; // a pointer to its thread
 vector<MainForm::cellData> MainForm::cellDataRay;
-MainForm::vendorStruct* MainForm::vendor;
 fstream MainForm::logDataStream;
 int MainForm::maxTableIndex; // holds the highest index pointer into cellData
-int MainForm::numVendors;
-int MainForm::maxVendorRecL;
 long MainForm::runStartTime;
 long MainForm::now; // absolute time of the block
 pageBlockType pageBlock; // which section of page is data coming from
@@ -288,7 +280,7 @@ void MainForm::init() {
     MainForm::drawChan24Plot();
     MainForm::drawChan5Plot();
     MainForm::drawTimePlot();
-    MainForm::loadVendorDb(); // do last 'cause it takes some time
+    MainForm::vendorDb = std::unique_ptr<VendorDb>(new VendorDb());
 }
 // saving as comments in case ever need it again...
 // reimplemented from QApplication so we can throw exceptions in slots
@@ -353,51 +345,6 @@ void MainForm::initStatusBar() {
 
 void MainForm::fillStatus() {
     MainForm::statusCounts->setText(QString::fromStdString((MainForm::stats.toString())));
-}
-
-void MainForm::loadVendorDb() {
-    // now deal with the vendor data array
-    // first record is number of vendors then max record length
-    ifstream vendorFile;
-    vendorFile.open(VENDOR_FILE_NAME, ios::in);
-    vendorFile >> MainForm::numVendors >> MainForm::maxVendorRecL;
-    string tempString;
-    // load vendor array with ID and name
-    MainForm::vendor = new MainForm::vendorStruct[MainForm::numVendors];
-    int vRecNo = 0;
-    getline(vendorFile, tempString); // clear the end of line above
-    while (getline(vendorFile, tempString)) {
-        MainForm::vendor[vRecNo].ID = strtol(tempString.substr(0,9).c_str(), nullptr, 16);
-        MainForm::vendor[vRecNo].blockMode = tempString[9];
-        MainForm::vendor[vRecNo].name = tempString.substr(10);
-        vRecNo++;
-    }
-    vendorFile.close();
-}
-
-string MainForm::findVendor(string MACaddr) {
-    int left = 0;
-    int right = MainForm::numVendors - 1;
-    int mid;
-    uint64_t key;
-    uint64_t mask;
-    char blockType;
-    key = strtol((MACaddr.substr(0, 2) + MACaddr.substr(3, 2) + MACaddr.substr(6, 2)
-            + MACaddr.substr(9,2) + MACaddr.substr(12,1)).c_str(), nullptr, 16);
-    while (left <= right) {
-        mid = (int) ((left + right) / 2);
-        blockType = MainForm::vendor[mid].blockMode;
-        if (blockType == 'L') mask = ~0x0000000000000FFF;
-        else if (blockType == 'M') mask = ~0x00000000000000FF;
-        else mask = ~0x0000000000000000; // block type Small
-        if ((key & mask) == MainForm::vendor[mid].ID) {
-            return MainForm::vendor[mid].name;
-        } else if (key > MainForm::vendor[mid].ID)
-            left = mid + 1;
-        else
-            right = mid - 1;
-    }
-    return "<unrecognized>";
 }
 
 void MainForm::addInterfaces() {
@@ -1130,7 +1077,7 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi].firstSeen = now;
     MainForm::cellDataRay[tbi].firstPlot = true;
     MainForm::cellDataRay[tbi].protocol = "unknown";
-    MainForm::cellDataRay[tbi].vendor = MainForm::findVendor(macAddress);
+    MainForm::cellDataRay[tbi].vendor = vendorDb->lookup(macAddress);
     MainForm::cellDataRay[tbi].pHistory = new History(); // give it a history
     MainForm::cellDataRay[tbi].pTimeCurve = new QwtPlotCurve(""); // and a history curve
     QColor tempColor = qColorArray[tbi % NUMBER_OF_COLORS];

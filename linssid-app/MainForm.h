@@ -22,6 +22,7 @@
 #include "prefsDialog.h"
 #include "Custom.h"
 #include "Stats.h"
+#include "VendorDb.h"
 
 class Getter; // forward declare
 
@@ -42,8 +43,6 @@ public:
     virtual ~MainForm();
     //    void run();
     void init();
-    void loadVendorDb();
-    std::string findVendor(std::string);
     void getUserID();
     void addInterfaces();
     void setInterface(int);
@@ -83,11 +82,8 @@ public:
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
     static std::vector<cellData> cellDataRay;
-    static vendorStruct* vendor;
     static std::fstream logDataStream;
     static int maxTableIndex;
-    static int numVendors;
-    static int maxVendorRecL;
     static long runStartTime;
     static long blockSampleTime;
     static long now;
@@ -128,6 +124,7 @@ protected:
     void handleDataReadyEvent(const DataReadyEvent*);
 
 private:
+    std::unique_ptr<VendorDb> vendorDb;
     QLabel *statusCounts;
     Stats stats;
 };
