@@ -89,7 +89,7 @@
 
 The LinSSID program is licensed under the terms of the GPL version 3. LinSSID version 2.2 and above are built using Qt5. LinSSID links to libraries of the Qwt project (http://qwt.sf.net). The LinSSID program also links to the Boost C++ libraries. The license to use these components is included in the program binary distribution.
 
-Hint: LinSSID will run faster when your interface is not connected to an attach point.</string>
+Hint: LinSSID will run faster when your interface is not connected to an access point.</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
