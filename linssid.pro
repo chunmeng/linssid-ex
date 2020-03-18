@@ -1,4 +1,4 @@
 TEMPLATE = subdirs
 # CONFIG += ordered
-CONFIG += c++11
+CONFIG += c++17
 SUBDIRS = linssid-app
