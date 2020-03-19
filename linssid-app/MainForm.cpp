@@ -1029,27 +1029,27 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi]->protocol = "unknown";
     MainForm::cellDataRay[tbi]->vendor = vendorDb->lookup(macAddress);
     MainForm::cellDataRay[tbi]->pHistory = make_unique<History>(); // give it a history
-    MainForm::cellDataRay[tbi]->pTimeCurve = new QwtPlotCurve(""); // and a history curve
+    MainForm::cellDataRay[tbi]->pTimeCurve = make_unique<QwtPlotCurve>(""); // and a history curve
     QColor tempColor = qColorArray[tbi % NUMBER_OF_COLORS];
     MainForm::cellDataRay[tbi]->color = tempColor; // assign a color from the palette
     MainForm::cellDataRay[tbi]->pTimeCurve->setPen(* new QPen(tempColor, 3.0));
     MainForm::cellDataRay[tbi]->pTimeCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
     MainForm::cellDataRay[tbi]->pTimeCurve->attach(MainForm::mainFormWidget.timePlot);
-    MainForm::cellDataRay[tbi]->pBandCurve = new QwtPlotCurve("");
+    MainForm::cellDataRay[tbi]->pBandCurve = make_unique<QwtPlotCurve>("");
     MainForm::cellDataRay[tbi]->pBandCurve->setPen(* new QPen(MainForm::cellDataRay[tbi]->color, 3.0));
     MainForm::cellDataRay[tbi]->pBandCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
-    MainForm::cellDataRay[tbi]->pCntlChanPlot = new QwtPlotMarker(); // create plot for control channel symbol
-    MainForm::cellDataRay[tbi]->pChanSymbol = new QwtSymbol();
+    MainForm::cellDataRay[tbi]->pCntlChanPlot = make_unique<QwtPlotMarker>(); // create plot for control channel symbol
+    MainForm::cellDataRay[tbi]->pChanSymbol = make_unique<QwtSymbol>();
     MainForm::cellDataRay[tbi]->pChanSymbol->setStyle(QwtSymbol::Diamond);
     MainForm::cellDataRay[tbi]->pChanSymbol->setColor(tempColor);
     MainForm::cellDataRay[tbi]->pChanSymbol->setSize(10, 10);
-    MainForm::cellDataRay[tbi]->pCntlChanPlot->setSymbol(MainForm::cellDataRay[tbi]->pChanSymbol);
+    MainForm::cellDataRay[tbi]->pCntlChanPlot->setSymbol(MainForm::cellDataRay[tbi]->pChanSymbol.get());
     // attaching plot curve waits 'till know frequency
     MainForm::mainFormWidget.mainTableWidget->setRowCount(tbi + 1);
     for (int ix = 0; ix < MAX_TABLE_COLS; ix++) {
-        MainForm::cellDataRay[tbi]->pTableItem[ix] = new QTableWidgetItem(); // Give it a table item for each column
+        MainForm::cellDataRay[tbi]->pTableItem[ix] = make_unique<QTableWidgetItem>(); // Give it a table item for each column
         MainForm::mainFormWidget.mainTableWidget->setItem(tbi, ix,
-                MainForm::cellDataRay[tbi]->pTableItem[ix]); // Give it a spot in the table
+                MainForm::cellDataRay[tbi]->pTableItem[ix].get()); // Give it a spot in the table
     }
     MainForm::cellDataRay[tbi]->pTableItem[PLOT]->setFlags(
             Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable);
