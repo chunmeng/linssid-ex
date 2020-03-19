@@ -1,7 +1,5 @@
 FROM debian:buster
 
-MAINTAINER chunmeng <oceanuz@gmail.com>
-
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM=xterm
 
