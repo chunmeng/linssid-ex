@@ -2,6 +2,7 @@
 #define	_DATASTRUCT_H
 
 #include <qwt_plot_marker.h>
+#include <memory>
 
 // Struct to hold summary data of scan
 struct Stats {
@@ -68,7 +69,7 @@ struct CellData {
     QwtSymbol* pChanSymbol;    
     QwtPlotCurve* pTimeCurve;
     QTableWidgetItem * pTableItem[MAX_TABLE_COLS];
-    History* pHistory;
+    std::unique_ptr<History> pHistory;
     int timesSeen; // believe it or not, some drivers report a MAC more than once per scan
 };
 

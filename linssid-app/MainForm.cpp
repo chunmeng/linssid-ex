@@ -1027,7 +1027,7 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi]->firstPlot = true;
     MainForm::cellDataRay[tbi]->protocol = "unknown";
     MainForm::cellDataRay[tbi]->vendor = vendorDb->lookup(macAddress);
-    MainForm::cellDataRay[tbi]->pHistory = new History(); // give it a history
+    MainForm::cellDataRay[tbi]->pHistory = make_unique<History>(); // give it a history
     MainForm::cellDataRay[tbi]->pTimeCurve = new QwtPlotCurve(""); // and a history curve
     QColor tempColor = qColorArray[tbi % NUMBER_OF_COLORS];
     MainForm::cellDataRay[tbi]->color = tempColor; // assign a color from the palette
