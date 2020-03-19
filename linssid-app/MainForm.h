@@ -78,7 +78,7 @@ public:
 
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
-    static std::vector<CellData> cellDataRay;
+    static std::vector<std::unique_ptr<CellData>> cellDataRay;
     static std::fstream logDataStream;
     static int maxTableIndex;
     static long runStartTime;
