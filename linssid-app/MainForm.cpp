@@ -54,7 +54,6 @@ extern runStates runstate;
 extern int realUID;
 extern struct passwd *realUser;
 extern string fullPrefsName;
-extern char* fullPrefsNameCstr;
 
 extern string genPipeName(int);
 
@@ -417,11 +416,10 @@ void MainForm::writePrefsFile() {
     // const char *homeDir = pw->pw_dir;
     // onst char *homeDir = realUser->pw_dir;
     extern string fullPrefsName;
-    extern char* fullPrefsNameCstr;
     ofstream prefs;
     prefs.open(fullPrefsName, ios::out);
-    waste(chown(fullPrefsNameCstr, realUser->pw_uid, realUser->pw_gid));
-    chmod(fullPrefsNameCstr, 00644);
+    waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
+    chmod(fullPrefsName.c_str(), 00644);
     prefs << "version " << LINSSIDPREFSVER << endl;
     // col number must match the enum in "custom.h"
     prefs << "colwidth";
@@ -466,8 +464,8 @@ void MainForm::writePrefsBlock(MainForm::sDefPref prefBlock) {
     extern string fullPrefsName;
     fstream prefs;
     prefs.open(fullPrefsName, ios::out);
-    waste(chown(fullPrefsNameCstr, realUser->pw_uid, realUser->pw_gid));
-    chmod(fullPrefsNameCstr, 00644);
+    waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
+    chmod(fullPrefsName.c_str(), 00644);
     prefs << "version " << LINSSIDPREFSVER << endl;
     prefs << "colwidth";
     for (int i = 0; i < MAX_TABLE_COLS; i++)
