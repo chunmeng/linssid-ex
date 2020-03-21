@@ -74,7 +74,8 @@ struct CellData {
     double yPlot[4];
     // see: http://www.qtcentre.org/threads/46316-Draw-a-single-point-into-a-qwt-plot
     std::unique_ptr<QwtPlotMarker> pCntlChanPlot; // to plot control channel marker
-    std::unique_ptr<QwtSymbol> pChanSymbol;
+    // @FIXME: Changing pChanSymbol to unique_ptr cause segfault at App exit. Do not know why yet. Leave it as raw ptr. 
+    QwtSymbol* pChanSymbol;
     std::unique_ptr<QwtPlotCurve> pTimeCurve;
     std::unique_ptr<QTableWidgetItem> pTableItem[MAX_TABLE_COLS];
     std::unique_ptr<History> pHistory;

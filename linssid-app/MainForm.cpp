@@ -1039,11 +1039,11 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi]->pBandCurve->setPen(* new QPen(MainForm::cellDataRay[tbi]->color, 3.0));
     MainForm::cellDataRay[tbi]->pBandCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
     MainForm::cellDataRay[tbi]->pCntlChanPlot = make_unique<QwtPlotMarker>(); // create plot for control channel symbol
-    MainForm::cellDataRay[tbi]->pChanSymbol = make_unique<QwtSymbol>();
+    MainForm::cellDataRay[tbi]->pChanSymbol = new QwtSymbol();
     MainForm::cellDataRay[tbi]->pChanSymbol->setStyle(QwtSymbol::Diamond);
     MainForm::cellDataRay[tbi]->pChanSymbol->setColor(tempColor);
     MainForm::cellDataRay[tbi]->pChanSymbol->setSize(10, 10);
-    MainForm::cellDataRay[tbi]->pCntlChanPlot->setSymbol(MainForm::cellDataRay[tbi]->pChanSymbol.get());
+    MainForm::cellDataRay[tbi]->pCntlChanPlot->setSymbol(MainForm::cellDataRay[tbi]->pChanSymbol);
     // attaching plot curve waits 'till know frequency
     MainForm::mainFormWidget.mainTableWidget->setRowCount(tbi + 1);
     for (int ix = 0; ix < MAX_TABLE_COLS; ix++) {
