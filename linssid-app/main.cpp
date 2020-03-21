@@ -38,7 +38,6 @@ struct passwd *realUser;
 string fullPrefsName;
 const char* fullPrefsNameCstr;
 string fullLogName;
-const char* fullLogNameCstr;
 
 
 int main(int argc, char *argv[]) {
@@ -67,7 +66,6 @@ It will not work. Try linssid-pkexec instead. Sorry. Goodbye.");
     fullPrefsName = string(realUser->pw_dir) + "/" + string(PREFS_FILE_NAME);
     fullPrefsNameCstr = fullPrefsName.c_str();
     fullLogName = string(realUser->pw_dir) + "/" + string(LOG_DATA_FILE_NAME);
-    fullLogNameCstr = fullLogName.c_str();
     
     //  create instances of the main GUI and the worker thread and initialize
     Getter getter1; // instance of Getter

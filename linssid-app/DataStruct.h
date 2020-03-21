@@ -1,7 +1,10 @@
 #ifndef _DATASTRUCT_H
 #define	_DATASTRUCT_H
 
-#include <qwt_plot_marker.h>
+#include "Custom.h"
+#include <QColor>
+#include <memory>
+#include <vector>
 
 // Struct to hold summary data of scan
 struct Stats {
@@ -35,8 +38,14 @@ struct History {
     double signal[MAX_SAMPLES * 2];
 };
 
+class QwtPlotCurve;
+class QwtSymbol;
+class QwtPlotMarker;
+class QTableWidgetItem;
+
 // Struct to hold individual AP entry (cell) found
 struct CellData {
+    using Vector = std::vector<std::unique_ptr<CellData>>;
     std::string macAddr;
     std::string essid;
     std::string mode; // master, managed, etc.
@@ -60,15 +69,15 @@ struct CellData {
     long lastSeen;
     std::string netType;
     QColor color;
-    QwtPlotCurve* pBandCurve;
+    std::unique_ptr<QwtPlotCurve> pBandCurve;
     double xPlot[4];
     double yPlot[4];
     // see: http://www.qtcentre.org/threads/46316-Draw-a-single-point-into-a-qwt-plot
-    QwtPlotMarker* pCntlChanPlot; // to plot control channel marker
-    QwtSymbol* pChanSymbol;    
-    QwtPlotCurve* pTimeCurve;
-    QTableWidgetItem * pTableItem[MAX_TABLE_COLS];
-    History* pHistory;
+    std::unique_ptr<QwtPlotMarker> pCntlChanPlot; // to plot control channel marker
+    std::unique_ptr<QwtSymbol> pChanSymbol;
+    std::unique_ptr<QwtPlotCurve> pTimeCurve;
+    std::unique_ptr<QTableWidgetItem> pTableItem[MAX_TABLE_COLS];
+    std::unique_ptr<History> pHistory;
     int timesSeen; // believe it or not, some drivers report a MAC more than once per scan
 };
 
