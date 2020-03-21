@@ -22,6 +22,7 @@
 #include "prefsDialog.h"
 #include "Custom.h"
 #include "DataStruct.h"
+#include "DataLogger.h"
 #include "VendorDb.h"
 
 class Getter; // forward declare
@@ -67,8 +68,6 @@ public:
     void fillStatus();
     void initNewCell(std::string, int);
     void extractData(std::string, int &, int &);
-    void doLogData();
-    void writeLogDataHeader();
     int MaxIntStr(const std::string&);
     int MinIntStr(const std::string&);
     inline void waste(int);
@@ -79,7 +78,6 @@ public:
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
     static std::vector<std::unique_ptr<CellData>> cellDataRay;
-    static std::fstream logDataStream;
     static int maxTableIndex;
     static long runStartTime;
     static long blockSampleTime;
@@ -121,6 +119,7 @@ protected:
     void handleDataReadyEvent(const DataReadyEvent*);
 
 private:
+    std::unique_ptr<DataLogger> dataLogger;
     std::unique_ptr<VendorDb> vendorDb;
     std::unique_ptr<QLabel> statusCounts;
     Stats stats;

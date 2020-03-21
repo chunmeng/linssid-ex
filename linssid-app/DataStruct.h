@@ -1,8 +1,10 @@
 #ifndef _DATASTRUCT_H
 #define	_DATASTRUCT_H
 
-#include <qwt_plot_marker.h>
+#include "Custom.h"
+#include <QColor>
 #include <memory>
+#include <vector>
 
 // Struct to hold summary data of scan
 struct Stats {
@@ -36,8 +38,14 @@ struct History {
     double signal[MAX_SAMPLES * 2];
 };
 
+class QwtPlotCurve;
+class QwtSymbol;
+class QwtPlotMarker;
+class QTableWidgetItem;
+
 // Struct to hold individual AP entry (cell) found
 struct CellData {
+    using Vector = std::vector<std::unique_ptr<CellData>>;
     std::string macAddr;
     std::string essid;
     std::string mode; // master, managed, etc.

@@ -105,8 +105,7 @@ struct MainForm::sDefPref {
 // declare some variables
 Getter* MainForm::pGetter; // a pointer to our data getter
 QThread* MainForm::pGetterThread; // a pointer to its thread
-vector<unique_ptr<CellData>> MainForm::cellDataRay;
-fstream MainForm::logDataStream;
+CellData::Vector MainForm::cellDataRay;
 int MainForm::maxTableIndex; // holds the highest index pointer into cellData
 long MainForm::runStartTime;
 long MainForm::now; // absolute time of the block
@@ -232,6 +231,8 @@ void MainForm::init() {
     MainForm::drawChan24Plot();
     MainForm::drawChan5Plot();
     MainForm::drawTimePlot();
+    extern string fullLogName;
+    MainForm::dataLogger = make_unique<DataLogger>(fullLogName);
     MainForm::vendorDb = make_unique<VendorDb>();
 }
 // saving as comments in case ever need it again...
@@ -719,7 +720,7 @@ void MainForm::closeEvent(QCloseEvent * event) {
     MainForm::mainFormWidget.statusTxt->repaint();
     remove(pipeName.c_str());
 //    linssidLog.close();
-    if (MainForm::logDataStream.is_open()) MainForm::logDataStream.close();
+    dataLogger.reset();
     //    QMainWindow::closeEvent(event);
     event->accept();
     std::exit(0); // that's the system exit, not the Qt version
@@ -1203,73 +1204,6 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
     }
 } // extractData()
 
-void MainForm::doLogData() {
-    extern string fullLogName;
-    extern char* fullLogNameCstr;
-    if (!MainForm::logDataStream.is_open()) { // if data log file is not open...
-        // struct passwd *pw = getpwuid(getuid());
-        // const char *homeDir = pw->pw_dir;
-        // string logDataFileName = string(homeDir) + "/" + string(LOG_DATA_FILE_NAME);
-        MainForm::logDataStream.open(fullLogName, ios::in); // open for read to see if file already exists
-        if (MainForm::logDataStream) { // if it exists.,..
-            string arg1 = ""; string arg2 = "";
-            logDataStream >> arg1 >> arg2;
-            if (arg1 != "LINSSIDDATALOGVER" || arg2 != LINSSIDDATALOGVER) { // old log file version
-                MainForm::logDataStream.close(); // close it for read
-                rename(fullLogNameCstr, (fullLogName + ".old").c_str());
-                writeLogDataHeader(); // open a new file for write append, insert header
-            } else {  // is new log format so open for write append
-                MainForm::logDataStream.close(); // close it for read
-                MainForm::logDataStream.open(fullLogName, ios::out | ios::app);
-                waste(chown(fullLogNameCstr, realUser->pw_uid, realUser->pw_gid));
-                chmod(fullLogNameCstr, 00644);
-            }
-        } else { // if not exists... open for append and write headers
-            writeLogDataHeader();
-        }
-    }
-    // now write data
-    char nowStr[64], firstStr[64], lastStr[64];
-    std::strftime(nowStr, 100, "%Y/%m/%d.%H:%M:%S", std::localtime(&MainForm::now));
-    for (int tbi = 0; tbi <= MainForm::maxTableIndex; tbi++) {
-        std::strftime(firstStr, 100, "%Y/%m/%d.%H:%M:%S", std::localtime(&MainForm::cellDataRay[tbi]->firstSeen));
-        std::strftime(lastStr, 100, "%Y/%m/%d.%H:%M:%S", std::localtime(&MainForm::cellDataRay[tbi]->lastSeen));
-        MainForm::logDataStream << nowStr << "\t"
-                << "\"" << MainForm::cellDataRay[tbi]->essid << "\"\t"
-                << MainForm::cellDataRay[tbi]->macAddr << "\t"
-                << MainForm::cellDataRay[tbi]->channel << "\t"
-                << MainForm::cellDataRay[tbi]->mode << "\t"
-                << MainForm::cellDataRay[tbi]->protocol << "\t"
-                << MainForm::cellDataRay[tbi]->security << "\t"
-                << MainForm::cellDataRay[tbi]->privacy << "\t"
-                << MainForm::cellDataRay[tbi]->cipher << "\t"
-                << MainForm::cellDataRay[tbi]->frequency << "\t"
-                << MainForm::cellDataRay[tbi]->quality << "\t"
-                << MainForm::cellDataRay[tbi]->signal << "\t"
-                << MainForm::cellDataRay[tbi]->load << "\t"
-                << MainForm::cellDataRay[tbi]->stationCount << "\t"
-                << MainForm::cellDataRay[tbi]->BW << "\t"
-                << MainForm::cellDataRay[tbi]->minSignal << "\t"
-                << MainForm::cellDataRay[tbi]->maxSignal << "\t"
-                << MainForm::cellDataRay[tbi]->cenChan << "\t"
-                << firstStr << "\t"
-                << lastStr << "\t"
-                << "\"" << MainForm::cellDataRay[tbi]->vendor << "\"" << endl;
-    }
-}
-
-void MainForm::writeLogDataHeader() {
-    extern string fullLogName;
-    extern char* fullLogNameCstr;
-    MainForm::logDataStream.close(); // close it for read if was open (don't really need to...)
-    MainForm::logDataStream.open(fullLogName, ios::out | ios::app); // open for write append
-    waste(chown(fullLogNameCstr, realUser->pw_uid, realUser->pw_gid));
-    chmod(fullLogNameCstr, 00644);
-    MainForm::logDataStream << "LINSSIDDATALOGVER " << LINSSIDDATALOGVER << "\n";
-    MainForm::logDataStream << "Time\tSSID\tMAC\tChannel\tMode\tProtocol\tSecurity\tPrivacy\t\
-Cipher\tFrequency\tQuality\tSignal\tLoad\t\tStationCount\tBW\tMin_Sig\tMax_Sig\tCen_Chan\tFirst_Seen\tLast_Seen\tVendor\n";
-}
-
 void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
     // Now something can be safely done with the Qt objects.
     // Access the custom data using event->getReadyBlockNo() etc.
@@ -1310,9 +1244,8 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
                 MainForm::fillPlots();
                 MainForm::fillStatus();
                 if (MainForm::logDataState == Qt::Checked) {
-                    doLogData();
+                    dataLogger->log(MainForm::cellDataRay);
                 }
-
             }
             
         }
