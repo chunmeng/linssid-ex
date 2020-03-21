@@ -290,9 +290,9 @@ void MainForm::initPlotGrids() {
 }
 
 void MainForm::initStatusBar() {
-    MainForm::statusCounts = new QLabel();
+    MainForm::statusCounts = make_unique<QLabel>();
     MainForm::statusCounts->setText(QString::fromStdString((MainForm::stats.toString())));
-    MainForm::mainFormWidget.statusbar->addPermanentWidget(MainForm::statusCounts);
+    MainForm::mainFormWidget.statusbar->addPermanentWidget(MainForm::statusCounts.get());
 }
 
 void MainForm::fillStatus() {

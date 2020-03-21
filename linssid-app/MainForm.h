@@ -122,7 +122,7 @@ protected:
 
 private:
     std::unique_ptr<VendorDb> vendorDb;
-    QLabel *statusCounts;
+    std::unique_ptr<QLabel> statusCounts;
     Stats stats;
 };
 
