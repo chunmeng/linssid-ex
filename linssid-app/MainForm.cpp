@@ -9,7 +9,6 @@
 #include <fstream>
 #include <string>
 #include <cstring>
-#include <sstream>
 #include <random>
 #include <climits>
 #include <memory>
@@ -43,6 +42,7 @@
 #include "AboutBox.h"
 #include "prefsDialog.h"
 #include "ui_MainForm.h"
+#include "Utils.h"
 
 extern int lastBlockRequested;
 extern int lastBlockReceived;
@@ -307,7 +307,7 @@ void MainForm::addInterfaces() {
     string commandLine = "iw dev >> " + somePipeName;
     if (system(commandLine.c_str()) == 0) {
         commandLine = "echo \'" + eof + "\' >> " + somePipeName;
-        waste(system(commandLine.c_str()));
+        Utils::waste(system(commandLine.c_str()));
         string interfaceLine;
         mainFormWidget.interfaceCbx->clear();
         boost::smatch sm;
@@ -328,7 +328,7 @@ void MainForm::addInterfaces() {
     commandLine = "cat /proc/net/wireless >> " + somePipeName;
     if (system(commandLine.c_str()) == 0) {
         commandLine = "echo \'" + eof + "\' >> " + somePipeName;
-        waste(system(commandLine.c_str()));
+        Utils::waste(system(commandLine.c_str()));
         string interfaceLine;
         QString interface;
         boost::smatch sm2;
@@ -418,7 +418,7 @@ void MainForm::writePrefsFile() {
     extern string fullPrefsName;
     ofstream prefs;
     prefs.open(fullPrefsName, ios::out);
-    waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
+    Utils::waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
     chmod(fullPrefsName.c_str(), 00644);
     prefs << "version " << LINSSIDPREFSVER << endl;
     // col number must match the enum in "custom.h"
@@ -464,7 +464,7 @@ void MainForm::writePrefsBlock(MainForm::sDefPref prefBlock) {
     extern string fullPrefsName;
     fstream prefs;
     prefs.open(fullPrefsName, ios::out);
-    waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
+    Utils::waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
     chmod(fullPrefsName.c_str(), 00644);
     prefs << "version " << LINSSIDPREFSVER << endl;
     prefs << "colwidth";
@@ -659,7 +659,7 @@ void MainForm::doPlotNone() {
 
 void MainForm::doTableChanged(int row, int column) {
     if (column == PLOT) {
-        waste(row);
+        Utils::waste(row);
         fillPlots();
     }
 }
@@ -729,12 +729,6 @@ void MainForm::drawTable() {
     MainForm::mainFormWidget.mainTableWidget->setColumnCount(MAX_TABLE_COLS);
     MainForm::mainFormWidget.mainTableWidget->setRowCount(MainForm::maxTableIndex + 1);
     // Make sure the column labels below are same order as the enum <colTitle>
-    /*
-    enum colTitle {
-    PLOT, SSID, MAC, CHANNEL, MODE, SECURITY, PRIVACY,
-    CIPHER, FREQUENCY, QUALITY, SIGNAL, BW, MINSIGNAL, MAXSIGNAL, CENCHAN,
-    FIRST_SEEN, LAST_SEEN, VENDOR, PROTOCOL // TYPE not yet impl
-}; */
     MainForm::mainFormWidget.mainTableWidget->setHorizontalHeaderLabels(
             QString("Plot|SSID|MAC|Channel|Mode|Security|Privacy|Cipher|Frequency\
 |Quality|Signal|Load|Station Count|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
@@ -1092,8 +1086,8 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
     }  else if (boost::regex_match(tl, sm, boost::regex(
             "^[ \\t]+Supported rates: (.*)", boost::regex_constants::icase))) { // protocol
         string tempStr = sm[1];
-        if (MainForm::MinIntStr(tempStr) < 11) MainForm::cellDataRay[tbi]->protocol += "b";
-        if (MainForm::MaxIntStr(tempStr) >= 11) MainForm::cellDataRay[tbi]->protocol += "g";
+        if (Utils::MinIntStr(tempStr) < 11) MainForm::cellDataRay[tbi]->protocol += "b";
+        if (Utils::MaxIntStr(tempStr) >= 11) MainForm::cellDataRay[tbi]->protocol += "g";
     }  else if (boost::regex_match(tl, sm, boost::regex(
             "^[ \\t]+HT Capabilities:", boost::regex_constants::icase))) { // protocol
         pageBlock = BT_HT_CAPABILITIES;
@@ -1250,49 +1244,3 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
         
     }
 }
-
-inline void MainForm::waste(int) {
-    // This silliness is to ignore an argument function's return code without
-    // having the compiler whine about it.
-}
-
-int MainForm::MaxIntStr(const string &s) {
-    stringstream ss(s);
-    string item;
-    int retInt = INT_MIN;
-    int tempInt;
-    while (getline(ss, item, ' ')) {
-        if (item.back() == '*') item=item.substr(0,item.length()-1);
-        tempInt = atoi(item.c_str());
-        if (tempInt > retInt) retInt = tempInt;
-    }
-    return retInt;
-}
-
-int MainForm::MinIntStr(const string &s) {
-    stringstream ss(s);
-    string item;
-    int retInt = INT_MAX;
-    int tempInt;
-    while (getline(ss, item, ' ')) {
-        if (item.back() == '*') item=item.substr(0,item.length()-1);
-        tempInt = atoi(item.c_str());
-        if (tempInt < retInt) retInt = tempInt;
-    }
-    return retInt;
-}
-
-// string trimming
-//void MainForm::trimRight( std::string& str )
-//{
-//    const std::string whiteSpaces( " \f\n\r\t\v" );
-//    std::string::size_type pos = str.find_last_not_of( whiteSpaces );
-//    str.erase( pos + 1 );    
-//}
-//
-//void MainForm::trimLeft( std::string& str )
-//{
-//    const std::string whiteSpaces( " \f\n\r\t\v" );
-//    std::string::size_type pos = str.find_first_not_of( whiteSpaces );
-//    str.erase( pos + 1 );    
-//}

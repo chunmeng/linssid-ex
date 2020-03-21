@@ -68,12 +68,7 @@ public:
     void fillStatus();
     void initNewCell(std::string, int);
     void extractData(std::string, int &, int &);
-    int MaxIntStr(const std::string&);
-    int MinIntStr(const std::string&);
-    inline void waste(int);
     void resolveMesh(int);
-    // void trimRight( string& );
-    // void trimLeft( string& );
 
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
