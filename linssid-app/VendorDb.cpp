@@ -48,6 +48,7 @@ void VendorDb::Impl::loadVendorDb()
     vendorFile >> numVendorsSink >> maxVendorRecL;
     string tempString;
     // load vendor array with ID and name
+    vendor.reserve(numVendorsSink + 2000);
     getline(vendorFile, tempString); // clear the end of line above
     while (getline(vendorFile, tempString)) {
         vendor.push_back({strtoul(tempString.substr(0,9).c_str(), nullptr, 16), tempString[9], tempString.substr(10)});
