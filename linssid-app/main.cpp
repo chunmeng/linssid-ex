@@ -36,7 +36,6 @@ runStates runState=STOPPED;
 int realUID;
 struct passwd *realUser;
 string fullPrefsName;
-const char* fullPrefsNameCstr;
 string fullLogName;
 
 
@@ -64,7 +63,6 @@ It will not work. Try linssid-pkexec instead. Sorry. Goodbye.");
     }
     realUser = getpwuid(realUID);
     fullPrefsName = string(realUser->pw_dir) + "/" + string(PREFS_FILE_NAME);
-    fullPrefsNameCstr = fullPrefsName.c_str();
     fullLogName = string(realUser->pw_dir) + "/" + string(LOG_DATA_FILE_NAME);
     
     //  create instances of the main GUI and the worker thread and initialize

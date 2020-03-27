@@ -24,7 +24,6 @@ private:
     void loadVendorDb();
 
 private:
-    int numVendors = 0;
     int maxVendorRecL = 0;
     vector<VendorStruct> vendor;
 };
@@ -45,14 +44,14 @@ void VendorDb::Impl::loadVendorDb()
         std::cout << "Error opening " << VENDOR_FILE_NAME << endl;
         return;
     }
-    vendorFile >> numVendors >> maxVendorRecL;
+    int numVendorsSink;
+    vendorFile >> numVendorsSink >> maxVendorRecL;
     string tempString;
     // load vendor array with ID and name
-    int vRecNo = 0;
+    vendor.reserve(numVendorsSink + 2000);
     getline(vendorFile, tempString); // clear the end of line above
     while (getline(vendorFile, tempString)) {
         vendor.push_back({strtoul(tempString.substr(0,9).c_str(), nullptr, 16), tempString[9], tempString.substr(10)});
-        vRecNo++;
     }
     vendorFile.close();
     std::cout << "Loaded " << vendor.size() << " vendor entries" << endl;
@@ -60,11 +59,11 @@ void VendorDb::Impl::loadVendorDb()
 
 std::string VendorDb::Impl::lookup(const string& mac)
 {
-    if (numVendors <= 0) {
-        return "<unrecognized>";
+    if (vendor.size() <= 0) {
+        return "<nodb>";
     }
     int left = 0;
-    int right = numVendors - 1;
+    int right = vendor.size() - 1;
     int mid;
     uint64_t key;
     uint64_t mask;

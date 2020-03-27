@@ -23,6 +23,7 @@
 #include "Custom.h"
 #include "DataStruct.h"
 #include "DataLogger.h"
+#include "PrefsHandler.h"
 #include "VendorDb.h"
 
 class Getter; // forward declare
@@ -30,12 +31,6 @@ class Getter; // forward declare
 class MainForm : public QMainWindow {
     Q_OBJECT
 public:
-
-    struct sSort;
-    struct sMaingeom;
-    struct sMainsplit;
-    struct sPlotprefs;
-    struct sDefPref;
 
     MainForm();
     virtual ~MainForm();
@@ -46,7 +41,6 @@ public:
     void setInterface(int);
     int getNapTime();
     void writePrefsFile();
-    void writePrefsBlock(sDefPref);
     void readPrefsFile();
     std::string getCurrentInterface();
     static const QEvent::Type DATA_READY_EVENT;
@@ -68,16 +62,11 @@ public:
     void fillStatus();
     void initNewCell(std::string, int);
     void extractData(std::string, int &, int &);
-    int MaxIntStr(const std::string&);
-    int MinIntStr(const std::string&);
-    inline void waste(int);
     void resolveMesh(int);
-    // void trimRight( string& );
-    // void trimLeft( string& );
 
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
-    static std::vector<std::unique_ptr<CellData>> cellDataRay;
+    static CellData::Vector cellDataRay;
     static int maxTableIndex;
     static long runStartTime;
     static long blockSampleTime;
@@ -98,7 +87,6 @@ public:
     static QwtPlotGrid* chan5Grid;
     static QwtPlotGrid* timeGrid;
     static prefsDialog* prefsDlg1;
-    static sDefPref defPref;
 
 public slots:
     void doRun();
@@ -121,6 +109,7 @@ protected:
 private:
     std::unique_ptr<DataLogger> dataLogger;
     std::unique_ptr<VendorDb> vendorDb;
+    std::unique_ptr<PrefsHandler> prefsHandler;
     std::unique_ptr<QLabel> statusCounts;
     Stats stats;
 };
