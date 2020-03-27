@@ -40,7 +40,7 @@ void DataLogger::log(const CellData::Vector& data)
             return;
         }
         waste(chown(logFileName_.c_str(), realUser->pw_uid, realUser->pw_gid));
-        waste(chmod(logFileName_.c_str(), 00644));
+        chmod(logFileName_.c_str(), 00644);
         writeHeader();
     }
 
