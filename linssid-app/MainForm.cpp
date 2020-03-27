@@ -352,46 +352,32 @@ void MainForm::logPrefChanged(int state) {
 }
 
 void MainForm::writePrefsFile() {
-    std::cout << "Writing pref to " << fullPrefsName << endl;
-    ofstream prefs;
-    prefs.open(fullPrefsName, ios::out);
-    Utils::waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
-    chmod(fullPrefsName.c_str(), 00644);
-    prefs << "version " << LINSSIDPREFSVER << endl;
+
+    PrefsHandler::sDefPref appPref;
+    appPref.version = LINSSIDPREFSVER;
     // col number must match the enum in "custom.h"
-    prefs << "colwidth";
     for (int col = 0; col < MAX_TABLE_COLS; col++) {
         int colWidth = mainFormWidget.mainTableWidget->columnWidth(col);
-        if (colWidth == 0) colWidth = columnWidth[col];
-        prefs << " " << colWidth;
+        appPref.colwidth[col] = (colWidth == 0) ? columnWidth[col] : colWidth;
     }
-    prefs << endl;
-    prefs << "colvis";
     for (int col = 0; col < MAX_TABLE_COLS; col++)
-        prefs << " " << !mainFormWidget.mainTableWidget->isColumnHidden(col);
-    prefs << endl;
-    prefs << "visorder";
+        appPref.colvis[col] = !mainFormWidget.mainTableWidget->isColumnHidden(col);
     for (int visCol = 0; visCol < MAX_TABLE_COLS; visCol++)
-        prefs << " " << mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(visCol);
-    prefs << endl;
-    prefs << "sort "
-            << MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->sortIndicatorSection() << " "
-            << MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->sortIndicatorOrder() << endl;
-    prefs << "maingeom " << this->x() << " "
-            << this->y() << " "
-            << this->width() << " "
-            << this->height() << endl;
-    prefs << "mainsplit " << MainForm::mainFormWidget.splitter->sizes().value(0) << " "
-            << MainForm::mainFormWidget.splitter->sizes().value(1) << endl;
-    prefs << "plottab " << MainForm::mainFormWidget.mainTabWgt->currentIndex() << endl;
-    prefs << "naptime " << MainForm::mainFormWidget.napTimeSlider->value() << endl;
-    prefs << "plotprefs "
-            << MainForm::tblFnt.pointSize() << " "
-            << int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()) << " "
-            << int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()) << " "
-            << MainForm::timeGrid->yEnabled() << endl;
-    prefs << "logdata " << MainForm::logDataState << endl;
-    prefs.close();
+        appPref.visorder[visCol] = mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(visCol);
+    appPref.sort = {.column = MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->sortIndicatorSection(),
+                    .order = MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->sortIndicatorOrder()};
+    appPref.maingeom = {.x = this->x(), .y = this->y(),
+                        .width = this->width(), .height = this->height()};
+    appPref.mainsplit = {.topheight = MainForm::mainFormWidget.splitter->sizes().value(0),
+                         .bottomheight = MainForm::mainFormWidget.splitter->sizes().value(1)};
+    appPref.plottab = MainForm::mainFormWidget.mainTabWgt->currentIndex();
+    appPref.naptime = MainForm::mainFormWidget.napTimeSlider->value();
+    appPref.plotprefs = {.fntSize = MainForm::tblFnt.pointSize(),
+                         .plotlb = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()),
+                         .plotub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()),
+                         .showgrid = MainForm::timeGrid->yEnabled()};
+    appPref.logData = MainForm::logDataState;
+    if (prefsHandler) prefsHandler->save(appPref);
 }
 
 void MainForm::readPrefsFile() {
