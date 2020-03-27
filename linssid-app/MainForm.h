@@ -23,6 +23,7 @@
 #include "Custom.h"
 #include "DataStruct.h"
 #include "DataLogger.h"
+#include "PrefsHandler.h"
 #include "VendorDb.h"
 
 class Getter; // forward declare
@@ -30,12 +31,6 @@ class Getter; // forward declare
 class MainForm : public QMainWindow {
     Q_OBJECT
 public:
-
-    struct sSort;
-    struct sMaingeom;
-    struct sMainsplit;
-    struct sPlotprefs;
-    struct sDefPref;
 
     MainForm();
     virtual ~MainForm();
@@ -46,7 +41,6 @@ public:
     void setInterface(int);
     int getNapTime();
     void writePrefsFile();
-    void writePrefsBlock(sDefPref);
     void readPrefsFile();
     std::string getCurrentInterface();
     static const QEvent::Type DATA_READY_EVENT;
@@ -93,7 +87,6 @@ public:
     static QwtPlotGrid* chan5Grid;
     static QwtPlotGrid* timeGrid;
     static prefsDialog* prefsDlg1;
-    static sDefPref defPref;
 
 public slots:
     void doRun();
@@ -116,6 +109,7 @@ protected:
 private:
     std::unique_ptr<DataLogger> dataLogger;
     std::unique_ptr<VendorDb> vendorDb;
+    std::unique_ptr<PrefsHandler> prefsHandler;
     std::unique_ptr<QLabel> statusCounts;
     Stats stats;
 };

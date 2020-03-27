@@ -61,46 +61,6 @@ using namespace std;
 
 // define a few things
 
-struct MainForm::sSort {
-    int column;
-    int order;
-};
-
-struct MainForm::sMaingeom {
-    int x;
-    int y;
-    int width;
-    int height;
-};
-
-struct MainForm::sMainsplit {
-    int topheight;
-    int bottomheight;
-};
-
-struct MainForm::sPlotprefs {
-    int fntSize;
-    int plotlb;
-    int plotub;
-    bool showgrid;
-};
-
-struct MainForm::sDefPref {
-    string version;
-    int colwidth[MAX_TABLE_COLS];
-    bool colvis[MAX_TABLE_COLS];
-    int visorder[MAX_TABLE_COLS];
-    sSort sort;
-    sMaingeom maingeom;
-    sMainsplit mainsplit;
-    int plottab;
-    int naptime;
-    sPlotprefs plotprefs;
-    int logData;
-};
-
-
-
 // declare some variables
 Getter* MainForm::pGetter; // a pointer to our data getter
 QThread* MainForm::pGetterThread; // a pointer to its thread
@@ -149,27 +109,6 @@ QwtPlotGrid* MainForm::chan24Grid;
 QwtPlotGrid* MainForm::chan5Grid;
 QwtPlotGrid* MainForm::timeGrid;
 prefsDialog* MainForm::prefsDlg1;
-MainForm::sDefPref MainForm::defPref = {// default prefs defined here
-    /* version  */ LINSSIDPREFSVER,
-    /* colwidth */
-    {100, 100, 100, 100, 100, 100, 100, 100, 100,
-            100, 100, 100, 100, 100, 100, 100, 100, 100, 100},
-    /* colvis   */
-    {1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-    /* visorder */
-    {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18},
-    /* sort     */
-    { 18, 1},
-    /* maingeom */
-    {389, 83, 721, 542},
-    ///* mainsplit*/
-    {154, 223},
-    /* plottab  */ 0,
-    /* naptime  */ 2,
-    /* plotprefs*/
-    {11, -100, -20, 1}, // added font size
-    /* logdata */ 0
-};
 
 MainForm::MainForm() {
 
@@ -225,6 +164,7 @@ void MainForm::init() {
     MainForm::initPlotGrids(); // must do before reading prefs, since prefs will modify
     MainForm::initColtoAction(); // init pointers to view menu items
     MainForm::initStatusBar();
+    MainForm::prefsHandler = make_unique<PrefsHandler>(fullPrefsName);
     MainForm::readPrefsFile();
     MainForm::drawTable(); // do it again after application of prefs
     MainForm::drawChan24Plot();
@@ -412,10 +352,7 @@ void MainForm::logPrefChanged(int state) {
 }
 
 void MainForm::writePrefsFile() {
-    // struct passwd *pw = getpwuid(getuid());
-    // const char *homeDir = pw->pw_dir;
-    // onst char *homeDir = realUser->pw_dir;
-    extern string fullPrefsName;
+    std::cout << "Writing pref to " << fullPrefsName << endl;
     ofstream prefs;
     prefs.open(fullPrefsName, ios::out);
     Utils::waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
@@ -457,56 +394,12 @@ void MainForm::writePrefsFile() {
     prefs.close();
 }
 
-void MainForm::writePrefsBlock(MainForm::sDefPref prefBlock) {
-    // Writes a block of preferences of the structure sDefPref struct.
-    // At entry, the file must either not exist or be closed.
-    // At exit, the newly written file will be closed.
-    extern string fullPrefsName;
-    fstream prefs;
-    prefs.open(fullPrefsName, ios::out);
-    Utils::waste(chown(fullPrefsName.c_str(), realUser->pw_uid, realUser->pw_gid));
-    chmod(fullPrefsName.c_str(), 00644);
-    prefs << "version " << LINSSIDPREFSVER << endl;
-    prefs << "colwidth";
-    for (int i = 0; i < MAX_TABLE_COLS; i++)
-        prefs << " " << prefBlock.colwidth[i];
-    prefs << endl;
-    prefs << "colvis";
-    for (int i = 0; i < MAX_TABLE_COLS; i++)
-        prefs << " " << prefBlock.colvis[i];
-    prefs << endl;
-    prefs << "visorder";
-    for (int i = 0; i < MAX_TABLE_COLS; i++)
-        prefs << " " << prefBlock.visorder[i];
-    prefs << endl;
-    prefs << "sort " << prefBlock.sort.column
-            << " " << prefBlock.sort.order << endl;
-    prefs << "maingeom " << prefBlock.maingeom.x
-            << " " << prefBlock.maingeom.y
-            << " " << prefBlock.maingeom.width
-            << " " << prefBlock.maingeom.height << endl;
-    prefs << "mainsplit " << prefBlock.mainsplit.topheight
-            << " " << prefBlock.mainsplit.bottomheight << endl;
-    prefs << "plottab " << prefBlock.plottab << endl;
-    prefs << "naptime " << prefBlock.naptime << endl;
-    prefs << "plotprefs " << prefBlock.plotprefs.fntSize
-            << " " << prefBlock.plotprefs.plotlb
-            << " " << prefBlock.plotprefs.plotub
-            << " " << prefBlock.plotprefs.showgrid
-            << endl;
-    prefs << "logdata " << prefBlock.logData << endl;
-    prefs.close();
-}
-
 void MainForm::readPrefsFile() {
-    // struct passwd *pw = getpwuid(getuid());
-    // const char *homeDir = pw->pw_dir;
-    // string absPrefsFileName = string(homeDir) + "/" + string(PREFS_FILE_NAME);
-    extern string fullPrefsName;
+    std::cout << "Read pref from " << fullPrefsName << endl;
     fstream prefs;
     prefs.open(fullPrefsName, ios::in);
     if (!prefs.is_open()) { // no prefs file, so create new with default values
-        writePrefsBlock(MainForm::defPref);
+        prefsHandler->writeDefault();
         prefs.open(fullPrefsName, ios::in);
     }
     // make sure right version
@@ -523,7 +416,7 @@ void MainForm::readPrefsFile() {
     }
     if (vers != LINSSIDPREFSVER) { // old version so trash and replace with defaults
         prefs.close();
-        writePrefsBlock(MainForm::defPref);
+        prefsHandler->writeDefault();
         prefs.open(fullPrefsName, ios::in);
     }
     // have a prefs file so parse
