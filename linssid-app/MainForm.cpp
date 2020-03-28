@@ -108,7 +108,6 @@ int MainForm::columnWidth[MAX_TABLE_COLS]; // since Qt doesn't see fit to rememb
 QwtPlotGrid* MainForm::chan24Grid;
 QwtPlotGrid* MainForm::chan5Grid;
 QwtPlotGrid* MainForm::timeGrid;
-prefsDialog* MainForm::prefsDlg1;
 
 MainForm::MainForm() {
 
@@ -495,19 +494,16 @@ void MainForm::showAboutBox() {
 }
 
 void MainForm::showPrefsDlg() {
-    if (MainForm::prefsDlg1 != 0) return; // already a prefs dialog open somewhere...
-    MainForm::prefsDlg1 = new prefsDialog(
+    if (prefsDlg != nullptr) return; // already a prefs dialog open somewhere...
+    prefsDlg = make_unique<prefsDialog>(
             QString::number(MainForm::tblFnt.pointSize()),
             int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()),
             int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()),
             MainForm::timeGrid->yEnabled(),
             MainForm::logDataState,
             (QObject*)this);
-//    MainForm::prefsDlg1->show();
-    MainForm::prefsDlg1->exec();
-//    MainForm::prefsDlg1->raise();
-    delete MainForm::prefsDlg1; // release the heap
-    MainForm::prefsDlg1 = 0; // null pointer
+    prefsDlg->exec();
+    prefsDlg.reset();
 }
 
 void MainForm::columnWidthSave(int col, int oldWidth, int newWidth) {
@@ -843,11 +839,11 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi]->pTimeCurve = make_unique<QwtPlotCurve>(""); // and a history curve
     QColor tempColor = qColorArray[tbi % NUMBER_OF_COLORS];
     MainForm::cellDataRay[tbi]->color = tempColor; // assign a color from the palette
-    MainForm::cellDataRay[tbi]->pTimeCurve->setPen(* new QPen(tempColor, 3.0));
+    MainForm::cellDataRay[tbi]->pTimeCurve->setPen(QPen(tempColor, 3.0));
     MainForm::cellDataRay[tbi]->pTimeCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
     MainForm::cellDataRay[tbi]->pTimeCurve->attach(MainForm::mainFormWidget.timePlot);
     MainForm::cellDataRay[tbi]->pBandCurve = make_unique<QwtPlotCurve>("");
-    MainForm::cellDataRay[tbi]->pBandCurve->setPen(* new QPen(MainForm::cellDataRay[tbi]->color, 3.0));
+    MainForm::cellDataRay[tbi]->pBandCurve->setPen(QPen(MainForm::cellDataRay[tbi]->color, 3.0));
     MainForm::cellDataRay[tbi]->pBandCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
     MainForm::cellDataRay[tbi]->pCntlChanPlot = make_unique<QwtPlotMarker>(); // create plot for control channel symbol
     MainForm::cellDataRay[tbi]->pChanSymbol = new QwtSymbol();

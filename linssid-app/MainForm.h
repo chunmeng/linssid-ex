@@ -86,7 +86,7 @@ public:
     static QwtPlotGrid* chan24Grid;
     static QwtPlotGrid* chan5Grid;
     static QwtPlotGrid* timeGrid;
-    static prefsDialog* prefsDlg1;
+    std::unique_ptr<prefsDialog> prefsDlg;
 
 public slots:
     void doRun();
