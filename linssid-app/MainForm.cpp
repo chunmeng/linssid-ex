@@ -164,8 +164,7 @@ void MainForm::init() {
     MainForm::initPlotGrids(); // must do before reading prefs, since prefs will modify
     MainForm::initColtoAction(); // init pointers to view menu items
     MainForm::initStatusBar();
-    MainForm::prefsHandler = make_unique<PrefsHandler>(fullPrefsName);
-    MainForm::readPrefsFile();
+    MainForm::loadPrefs();
     MainForm::drawTable(); // do it again after application of prefs
     MainForm::drawChan24Plot();
     MainForm::drawChan5Plot();
@@ -351,8 +350,7 @@ void MainForm::logPrefChanged(int state) {
     MainForm::logDataState = state;
 }
 
-void MainForm::writePrefsFile() {
-
+void MainForm::savePrefs() {
     PrefsHandler::sDefPref appPref;
     appPref.version = LINSSIDPREFSVER;
     // col number must match the enum in "custom.h"
@@ -380,119 +378,61 @@ void MainForm::writePrefsFile() {
     if (prefsHandler) prefsHandler->save(appPref);
 }
 
-void MainForm::readPrefsFile() {
-    std::cout << "Read pref from " << fullPrefsName << endl;
-    fstream prefs;
-    prefs.open(fullPrefsName, ios::in);
-    if (!prefs.is_open()) { // no prefs file, so create new with default values
-        prefsHandler->writeDefault();
-        prefs.open(fullPrefsName, ios::in);
-    }
-    // make sure right version
-    string line, tag, vers;
-    istringstream lineParse;
-    while (getline(prefs, line)) {
-        lineParse.str(line);
-        lineParse.clear();
-        lineParse >> tag;
-        if (tag == "version") {
-            lineParse >> vers;
-            break;
+void MainForm::loadPrefs() {
+    if (!prefsHandler) prefsHandler = make_unique<PrefsHandler>(fullPrefsName);
+    PrefsHandler::sDefPref appPref = prefsHandler->load();
+
+    for (int col = 0; col < MAX_TABLE_COLS; col++) {
+        if (appPref.colwidth[col] > 0) {
+            MainForm::mainFormWidget.mainTableWidget->setColumnWidth(col, appPref.colwidth[col]);
+            columnWidth[col] = appPref.colwidth[col];
         }
     }
-    if (vers != LINSSIDPREFSVER) { // old version so trash and replace with defaults
-        prefs.close();
-        prefsHandler->writeDefault();
-        prefs.open(fullPrefsName, ios::in);
+
+    for (int col = 0; col < MAX_TABLE_COLS; col++) {
+        bool vis = appPref.colvis[col];
+        MainForm::colToQAction[col]->setChecked(vis);
+        MainForm::mainFormWidget.mainTableWidget->setColumnHidden(col, !vis);
     }
-    // have a prefs file so parse
-    prefs.seekg(0);
-    prefs.clear();
-    int colWidth, sortCol, sortDir;
-    int x, y, winWidth, winHeight;
-    int tab, splitHeight0, splitHeight1;
-    int napTime;
-    bool vis;
-    sortCol = -1;
-    int visOrder[MAX_TABLE_COLS]; // holds mapping from logical to visual as they change
-    for (int lcol = 0; lcol < MAX_TABLE_COLS; lcol++) visOrder[lcol] = lcol;
-    while (getline(prefs, line)) {
-        lineParse.str(line);
-        lineParse.clear();
-        lineParse >> tag;
-        if (tag == "colwidth") {
-            for (int col = 0; col < MAX_TABLE_COLS; col++) {
-                lineParse >> colWidth;
-                if (colWidth > 0) {
-                    MainForm::mainFormWidget.mainTableWidget->setColumnWidth(col, colWidth);
-                    columnWidth[col] = colWidth;
+
+    if (appPref.sort.column >= 0 && appPref.sort.column < MAX_TABLE_COLS) {
+        MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->setSortIndicator(appPref.sort.column, Qt::SortOrder(appPref.sort.order));
+    }
+
+    this->setGeometry(appPref.maingeom.x, appPref.maingeom.y, appPref.maingeom.width, appPref.maingeom.height);
+
+    for (int i = 0; i < MAX_TABLE_COLS - 1; i++) { // loop through visual order
+        if (appPref.visorder[i] != mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(i)) {
+            // find the index of the visual column that has the desired logical column
+            for (int j = i + 1; j < MAX_TABLE_COLS; j++) { // and swap
+                if (appPref.visorder[i] == mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(j)) {
+                    mainFormWidget.mainTableWidget->horizontalHeader()->swapSections(i, j);
+                    break;
                 }
             }
-        } else if (tag == "colvis") {
-            for (int col = 0; col < MAX_TABLE_COLS; col++) {
-                lineParse >> vis;
-                MainForm::colToQAction[col]->setChecked(vis);
-                MainForm::mainFormWidget.mainTableWidget->setColumnHidden(col, !vis);
-            }
-        } else if (tag == "sort") {
-            lineParse >> sortCol >> sortDir;
-            if (sortCol >= 0 && sortCol < MAX_TABLE_COLS) {
-                MainForm::mainFormWidget.mainTableWidget->horizontalHeader()
-                        ->setSortIndicator(sortCol, Qt::SortOrder(sortDir));
-            }
-        } else if (tag == "maingeom") {
-            lineParse >> x >> y >> winWidth >> winHeight;
-            this->setGeometry(x, y, winWidth, winHeight);
-        } else if (tag == "visorder") {
-            for (int i = 0; i < MAX_TABLE_COLS; i++)
-                lineParse >> visOrder[i];
-            for (int i = 0; i < MAX_TABLE_COLS - 1; i++) { // loop through visual order
-                if (visOrder[i] != mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(i)) {
-                    // find the index of the visual column that has the desired logical column
-                    for (int j = i + 1; j < MAX_TABLE_COLS; j++) { // and swap
-                        if (visOrder[i] == mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(j)) {
-                            mainFormWidget.mainTableWidget->horizontalHeader()->swapSections(i, j);
-                            break;
-                        }
-                    }
-                }
-            }
-        } else if (tag == "plottab") {
-            lineParse >> tab;
-            MainForm::mainFormWidget.mainTabWgt->setCurrentIndex(tab);
-        } else if (tag == "mainsplit") {
-            lineParse >> splitHeight0 >> splitHeight1;
-            QList<int> bullshit; // Nokia didn't have to rewrite the entire c++ syntax
-            bullshit << splitHeight0 << splitHeight1;
-            MainForm::mainFormWidget.splitter->setSizes(bullshit);
-        } else if (tag == "naptime") {
-            lineParse >> napTime;
-            MainForm::mainFormWidget.napTimeSlider->setValue(napTime);
-        } else if (tag == "plotprefs") {
-            int fntSize;
-            int plotLb, plotUb;
-            bool showGrid;
-            lineParse >> fntSize >> plotLb >> plotUb >> showGrid;
-            // validate or the mess gets big
-            if ((plotLb < -100) || (plotUb > 0) || (plotUb < (plotLb + 10))) { // prefs were hosed
-                plotLb = -100;
-                plotUb = -20; // so reset them to nominal values
-            }
-            if ((fntSize < 10) || (fntSize > 16)) fntSize = 11; // reset to nominal
-            
-            MainForm::mainFormWidget.timePlot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
-            MainForm::mainFormWidget.chan24Plot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
-            MainForm::mainFormWidget.chan5Plot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
-            MainForm::tblFnt.setPointSize(fntSize);
-            MainForm::mainFormWidget.mainTableWidget->setFont(tblFnt);
-            MainForm::timeGrid->enableY(showGrid);
-            MainForm::chan24Grid->enableY(showGrid);
-            MainForm::chan5Grid->enableY(showGrid);
-        } else if (tag == "logdata") {
-            lineParse >> MainForm::logDataState;
         }
     }
-    prefs.close();
+
+    MainForm::mainFormWidget.mainTabWgt->setCurrentIndex(appPref.plottab);
+    MainForm::mainFormWidget.splitter->setSizes({appPref.mainsplit.topheight, appPref.mainsplit.bottomheight});
+    MainForm::mainFormWidget.napTimeSlider->setValue(appPref.naptime);
+
+    // Sanity is ensured by PrefsHandler
+    int fntSize = appPref.plotprefs.fntSize;
+    int plotLb = appPref.plotprefs.plotlb;
+    int plotUb = appPref.plotprefs.plotub;
+    bool showGrid = appPref.plotprefs.showgrid;
+
+    MainForm::mainFormWidget.timePlot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
+    MainForm::mainFormWidget.chan24Plot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
+    MainForm::mainFormWidget.chan5Plot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
+    MainForm::tblFnt.setPointSize(fntSize);
+    MainForm::mainFormWidget.mainTableWidget->setFont(tblFnt);
+    MainForm::timeGrid->enableY(showGrid);
+    MainForm::chan24Grid->enableY(showGrid);
+    MainForm::chan5Grid->enableY(showGrid);
+
+    MainForm::logDataState = appPref.logData;
 }
 
 void MainForm::postDataReadyEvent(const int customData1) {
@@ -591,7 +531,7 @@ void MainForm::closeEvent(QCloseEvent * event) {
     MainForm::mainFormWidget.statusTxt->repaint();
     while (runState != STOPPED) usleep(500 * 1000); // wait until getter is stopped
     pGetterThread->QThread::quit();
-    writePrefsFile();
+    savePrefs();
     pGetterThread->QThread::wait();
     MainForm::mainFormWidget.statusTxt->setText("Closing ...");
     MainForm::mainFormWidget.statusTxt->repaint();

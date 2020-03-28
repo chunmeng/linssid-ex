@@ -40,8 +40,8 @@ public:
     void addInterfaces();
     void setInterface(int);
     int getNapTime();
-    void writePrefsFile();
-    void readPrefsFile();
+    void savePrefs();
+    void loadPrefs();
     std::string getCurrentInterface();
     static const QEvent::Type DATA_READY_EVENT;
     class DataReadyEvent;

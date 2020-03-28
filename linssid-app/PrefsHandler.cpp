@@ -1,6 +1,7 @@
 #include "PrefsHandler.h"
 #include "Utils.h"
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
@@ -37,8 +38,8 @@ static PrefsHandler::sDefPref defPref = {// default prefs defined here
 
 }
 
-PrefsHandler::PrefsHandler(const std::string& logPath)
-    : logPath_(logPath)
+PrefsHandler::PrefsHandler(const std::string& filePath)
+    : filePath_(filePath)
 {
 }
 
@@ -54,11 +55,11 @@ void PrefsHandler::save(const sDefPref& prefData)
     // Writes a block of preferences of the structure sDefPref struct.
     // At entry, the file must either not exist or be closed.
     // At exit, the newly written file will be closed.
-    std::cout << "Writing pref to " << logPath_ << endl;
+    std::cout << "Writing preference to " << filePath_ << endl;
     ofstream prefs;
-    prefs.open(logPath_, ios::out);
-    Utils::waste(chown(logPath_.c_str(), realUser->pw_uid, realUser->pw_gid));
-    chmod(logPath_.c_str(), 00644);
+    prefs.open(filePath_, ios::out);
+    Utils::waste(chown(filePath_.c_str(), realUser->pw_uid, realUser->pw_gid));
+    chmod(filePath_.c_str(), 00644);
 
     prefs << "version " << prefData.version << endl;
     prefs << "colwidth";
@@ -90,4 +91,82 @@ void PrefsHandler::save(const sDefPref& prefData)
             << endl;
     prefs << "logdata " << prefData.logData << endl;
     prefs.close();
+}
+
+PrefsHandler::sDefPref PrefsHandler::load()
+{
+    sDefPref prefData;
+    fstream prefs;
+    prefs.open(filePath_, ios::in);
+    if (!prefs.is_open()) { // no prefs file, so return default
+        std::cout << "Load default preference" << endl;
+        prefData = defPref;
+        return prefData;
+    }
+    // make sure right version
+    string line, tag, vers;
+    istringstream lineParse;
+    while (getline(prefs, line)) {
+        lineParse.str(line);
+        lineParse.clear();
+        lineParse >> tag;
+        if (tag == "version") {
+            lineParse >> prefData.version;
+            break;
+        }
+    }
+    if (prefData.version != LINSSIDPREFSVER) { // old version so trash and replace with defaults
+        prefs.close();
+        std::cout << "Could not parse ver: " << prefData.version << ". Load default preference" << endl;
+        prefData = defPref;
+        return prefData;
+    }
+    // Proceed to parse prefs
+    std::cout << "Load preference from " << filePath_ << endl;
+    prefs.seekg(0);
+    prefs.clear();
+    while (getline(prefs, line)) {
+        lineParse.str(line);
+        lineParse.clear();
+        lineParse >> tag;
+        if (tag == "colwidth") {
+            for (int col = 0; col < MAX_TABLE_COLS; col++) {
+                lineParse >> prefData.colwidth[col];
+            }
+        } else if (tag == "colvis") {
+            for (int col = 0; col < MAX_TABLE_COLS; col++) {
+                lineParse >> prefData.colvis[col];
+            }
+        } else if (tag == "sort") {
+            lineParse >> prefData.sort.column >> prefData.sort.order;
+        } else if (tag == "maingeom") {
+            lineParse >> prefData.maingeom.x >> prefData.maingeom.y >> prefData.maingeom.width >> prefData.maingeom.height;
+        } else if (tag == "visorder") {
+            for (int i = 0; i < MAX_TABLE_COLS; i++)
+                lineParse >> prefData.visorder[i];
+        } else if (tag == "plottab") {
+            lineParse >> prefData.plottab;
+        } else if (tag == "mainsplit") {
+            lineParse >> prefData.mainsplit.topheight >> prefData.mainsplit.bottomheight;
+        } else if (tag == "naptime") {
+            lineParse >> prefData.naptime;
+        } else if (tag == "plotprefs") {
+            int fntSize;
+            int plotLb, plotUb;
+            lineParse >> fntSize >> plotLb >> plotUb >> prefData.plotprefs.showgrid;
+            // validate or the mess gets big
+            if ((plotLb < -100) || (plotUb > 0) || (plotUb < (plotLb + 10))) { // prefs were hosed
+                plotLb = -100;
+                plotUb = -20; // so reset them to nominal values
+            }
+            prefData.plotprefs.plotlb = plotLb;
+            prefData.plotprefs.plotub = plotUb;
+            if ((fntSize < 10) || (fntSize > 16)) fntSize = 11; // reset to nominal
+            prefData.plotprefs.fntSize = fntSize;
+        } else if (tag == "logdata") {
+            lineParse >> prefData.logData;
+        }
+    }
+    prefs.close();
+    return prefData;
 }

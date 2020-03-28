@@ -45,14 +45,17 @@ public:
     };
 
 public:
-    PrefsHandler(const std::string& logPath);
+    PrefsHandler(const std::string& filePath);
     virtual ~PrefsHandler();
 
     void save(const sDefPref& prefData);
+    sDefPref load();
+
+private:
     void writeDefault();
 
 private:
-    std::string logPath_;
+    std::string filePath_;
 };
 
 #endif	/* _PREFSHANDLER_H */
