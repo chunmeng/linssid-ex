@@ -83,9 +83,9 @@ public:
     static int numFntSizes;
     static QAction* colToQAction[MAX_TABLE_COLS];
     static int columnWidth[MAX_TABLE_COLS];
-    static QwtPlotGrid* chan24Grid;
-    static QwtPlotGrid* chan5Grid;
-    static QwtPlotGrid* timeGrid;
+    std::unique_ptr<QwtPlotGrid> chan24Grid;
+    std::unique_ptr<QwtPlotGrid> chan5Grid;
+    std::unique_ptr<QwtPlotGrid> timeGrid;
     std::unique_ptr<prefsDialog> prefsDlg;
 
 public slots:

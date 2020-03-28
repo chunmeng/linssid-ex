@@ -105,9 +105,6 @@ QString MainForm::fntSizes[] = {"10", "11", "12", "14", "16"};
 int MainForm::numFntSizes = 5;
 QAction* MainForm::colToQAction[MAX_TABLE_COLS];
 int MainForm::columnWidth[MAX_TABLE_COLS]; // since Qt doesn't see fit to remember for us...
-QwtPlotGrid* MainForm::chan24Grid;
-QwtPlotGrid* MainForm::chan5Grid;
-QwtPlotGrid* MainForm::timeGrid;
 
 MainForm::MainForm() {
 
@@ -216,13 +213,13 @@ void MainForm::initColtoAction() {
 
 void MainForm::initPlotGrids() {
     // add some grids to our plots
-    MainForm::chan24Grid = new QwtPlotGrid();
+    MainForm::chan24Grid = make_unique<QwtPlotGrid>();
     MainForm::chan24Grid->enableX(false);
     MainForm::chan24Grid->attach(MainForm::mainFormWidget.chan24Plot);
-    MainForm::chan5Grid = new QwtPlotGrid();
+    MainForm::chan5Grid = make_unique<QwtPlotGrid>();
     MainForm::chan5Grid->enableX(false);
     MainForm::chan5Grid->attach(MainForm::mainFormWidget.chan5Plot);
-    MainForm::timeGrid = new QwtPlotGrid();
+    MainForm::timeGrid = make_unique<QwtPlotGrid>();
     MainForm::timeGrid->enableX(false);
     MainForm::timeGrid->attach(MainForm::mainFormWidget.timePlot);
 }
