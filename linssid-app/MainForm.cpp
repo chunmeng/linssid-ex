@@ -976,10 +976,12 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
     } else if (pageBlock == BT_HT_CAPABILITIES && boost::regex_match(tl, sm, boost::regex(".*?HT20/HT40.*",
             boost::regex_constants::icase))) { // Bandwidth HT 40 MHz
         MainForm::cellDataRay[tbi]->BW = 40;
-    } else if (pageBlock == BT_VHT_OPERATION && boost::regex_match(tl, sm, boost::regex(".*?\\* channel width:.*?([0-9]+) MHz.*",
+    } else if (pageBlock == BT_VHT_OPERATION && boost::regex_match(tl, sm, boost::regex(".*?\\* channel width:.*?([0-9]).*?([0-9]+) MHz.*",
             boost::regex_constants::icase))) { // Bandwidth VHT
-        string tempString = sm[1];
-        MainForm::cellDataRay[tbi]->BW = atoi(tempString.c_str());
+        int val = atoi(string(sm[1]).c_str());
+        if (val == 0) return; // 0 (20 or 40 MHz) - BW from HT operation should be used
+        string bwString = sm[2];
+        MainForm::cellDataRay[tbi]->BW = atoi(bwString.c_str());
     } else if (boost::regex_match(tl, sm, boost::regex(".*?Pairwise ciphers: *(.*)",
             boost::regex_constants::icase))) { // pairwise ciphers
         MainForm::cellDataRay[tbi]->cipher = sm[1];
