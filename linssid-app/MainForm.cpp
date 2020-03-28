@@ -29,6 +29,7 @@
 #include <qwt_plot_grid.h>
 #include <qwt_symbol.h>
 #include <qwt_plot_marker.h>
+#include <qwt_plot_textlabel.h>
 #include <QPointF>
 #include <qwt_scale_draw.h>
 #include <sys/stat.h>
@@ -701,7 +702,6 @@ void MainForm::drawChan24Plot() {
     MainForm::mainFormWidget.chan24Plot->setAxisScale(QwtPlot::xBottom, -1, 16, 1);
     MainForm::mainFormWidget.chan24Plot->setAxisMaxMinor(QwtPlot::xBottom, 0);
     MainForm::mainFormWidget.chan24Plot->setAxisScaleDraw(QwtPlot::xBottom, new Chan24ScaleDraw());
-    //    MainForm::mainFormWidget.chan24Plot->setAxisScale(QwtPlot::yLeft, -100, -20, 20);
     MainForm::mainFormWidget.chan24Plot->replot();
 }
 
@@ -710,7 +710,6 @@ void MainForm::drawChan5Plot() {
     MainForm::mainFormWidget.chan5Plot->setAxisScale(QwtPlot::xBottom, 0, 170, 10);
     MainForm::mainFormWidget.chan5Plot->setAxisMaxMinor(QwtPlot::xBottom, 5);
     MainForm::mainFormWidget.chan5Plot->setAxisScaleDraw(QwtPlot::xBottom, new Chan5ScaleDraw());
-    //    MainForm::mainFormWidget.chan5Plot->setAxisScale(QwtPlot::yLeft, -100, -20, 20);
     MainForm::mainFormWidget.chan5Plot->replot();
 }
 
@@ -720,7 +719,6 @@ void MainForm::drawTimePlot() {
             MainForm::blockSampleTime - TIME_PLOT_SCALE,
             MainForm::blockSampleTime, 10);
     MainForm::mainFormWidget.timePlot->setAxisMaxMinor(QwtPlot::xBottom, 5);
-    //    MainForm::mainFormWidget.timePlot->setAxisScale(QwtPlot::yLeft, -100, -20, 20);
     MainForm::mainFormWidget.timePlot->replot();
 }
 
@@ -732,21 +730,30 @@ void MainForm::fillPlots() {
     for (int tbi = 0; tbi <= maxTableIndex; tbi++) {
         // first attach plots plots we couldn't before because of sparse data
         if (MainForm::cellDataRay[tbi]->pTableItem[PLOT]->checkState() == Qt::Checked) {
-            MainForm::cellDataRay[tbi]->pChanSymbol->setStyle(QwtSymbol::Diamond);
+            if (MainForm::cellDataRay[tbi]->BW >= 40)
+                MainForm::cellDataRay[tbi]->pChanSymbol->setStyle(QwtSymbol::Diamond);
+            else MainForm::cellDataRay[tbi]->pChanSymbol->setStyle(QwtSymbol::Triangle);
+
             MainForm::cellDataRay[tbi]->pChanSymbol->setColor(MainForm::cellDataRay[tbi]->color);
             MainForm::cellDataRay[tbi]->pChanSymbol->setSize(10, 10);
             if (MainForm::cellDataRay[tbi]->firstPlot) {
                 resolveMesh(tbi);
                 if (MainForm::cellDataRay[tbi]->frequency.substr(0, 1) == "2") {
                     MainForm::cellDataRay[tbi]->pBandCurve->attach(MainForm::mainFormWidget.chan24Plot);
-                    if (MainForm::cellDataRay[tbi]->BW >= 40) 
-                        MainForm::cellDataRay[tbi]->pCntlChanPlot->attach(MainForm::mainFormWidget.chan24Plot);
+                    MainForm::cellDataRay[tbi]->pCntlChanPlot->attach(MainForm::mainFormWidget.chan24Plot);
                 } else {
                     MainForm::cellDataRay[tbi]->pBandCurve->attach(MainForm::mainFormWidget.chan5Plot);
-                    if (MainForm::cellDataRay[tbi]->BW >= 40) {
-                        MainForm::cellDataRay[tbi]->pCntlChanPlot->attach(MainForm::mainFormWidget.chan5Plot);
-                    }
+                    MainForm::cellDataRay[tbi]->pCntlChanPlot->attach(MainForm::mainFormWidget.chan5Plot);
                 }
+                // @TODO Add prefs to enable/disable label on plot
+                QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi]->essid);
+                markerLabel.setColor(MainForm::cellDataRay[tbi]->color);
+                int ub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound());
+                if (MainForm::cellDataRay[tbi]->signal <= ub - 5)
+                    MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignTop);
+                else MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignBottom);
+                MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabel(markerLabel);
+
                 MainForm::cellDataRay[tbi]->firstPlot = false;
             }
         } else {
@@ -765,11 +772,10 @@ void MainForm::fillPlots() {
         if (MainForm::cellDataRay[tbi]->pTableItem[PLOT]->checkState() == Qt::Checked) {
             MainForm::cellDataRay[tbi]->pBandCurve->setRawSamples(MainForm::cellDataRay[tbi]->xPlot,
                     MainForm::cellDataRay[tbi]->yPlot, 4);
-            if (MainForm::cellDataRay[tbi]->BW >= 40) { // here we plot a point for the control channel
+                // here we plot a point for the control channel
                 MainForm::cellDataRay[tbi]->pCntlChanPlot->setValue( 
                     QPointF( (float) MainForm::cellDataRay[tbi]->channel, 
-                    MainForm::cellDataRay[tbi]->signal ) );
-            }
+                    MainForm::cellDataRay[tbi]->signal));
         } else {
             MainForm::cellDataRay[tbi]->pBandCurve->setSamples(0, 0, 0);
         }
@@ -1053,8 +1059,6 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
                     dataLogger->log(MainForm::cellDataRay);
                 }
             }
-            
         }
-        
     }
 }
