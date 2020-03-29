@@ -327,16 +327,19 @@ int MainForm::getNapTime() {
     return MainForm::mainFormWidget.napTimeSlider->value();
 }
 
-void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, bool showGrid) {
-    // a slot called from the prefs dialog to dynamically update the plots
-    // MainForm::mainFormWidget.mainTableWidget->setFont(tblFntSize,"Ariel");
-    MainForm::tblFnt.setPointSize(tblFntSize.toInt());
+void MainForm::applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGrid) {
+    MainForm::tblFnt.setPointSize(fntSize);
     MainForm::mainFormWidget.timePlot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
     MainForm::mainFormWidget.chan24Plot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
     MainForm::mainFormWidget.chan5Plot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
     MainForm::timeGrid->enableY(showGrid);
     MainForm::chan24Grid->enableY(showGrid);
     MainForm::chan5Grid->enableY(showGrid);
+}
+
+void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, bool showGrid) {
+    // a slot called from the prefs dialog to dynamically update the plots
+    applyPlotPrefs(tblFntSize.toInt(), plotMin, plotMax, showGrid);
     MainForm::reDrawTable();
     MainForm::mainFormWidget.timePlot->replot();
     MainForm::mainFormWidget.chan24Plot->replot();
@@ -419,15 +422,8 @@ void MainForm::loadPrefs() {
     int plotLb = appPref.plotprefs.plotlb;
     int plotUb = appPref.plotprefs.plotub;
     bool showGrid = appPref.plotprefs.showgrid;
-
-    MainForm::mainFormWidget.timePlot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
-    MainForm::mainFormWidget.chan24Plot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
-    MainForm::mainFormWidget.chan5Plot->setAxisScale(QwtPlot::yLeft, plotLb, plotUb, 20);
-    MainForm::tblFnt.setPointSize(fntSize);
+    applyPlotPrefs(fntSize, plotLb, plotUb, showGrid);
     MainForm::mainFormWidget.mainTableWidget->setFont(tblFnt);
-    MainForm::timeGrid->enableY(showGrid);
-    MainForm::chan24Grid->enableY(showGrid);
-    MainForm::chan5Grid->enableY(showGrid);
 
     MainForm::logDataState = appPref.logData;
 }

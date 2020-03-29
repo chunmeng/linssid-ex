@@ -40,8 +40,6 @@ public:
     void addInterfaces();
     void setInterface(int);
     int getNapTime();
-    void savePrefs();
-    void loadPrefs();
     std::string getCurrentInterface();
     static const QEvent::Type DATA_READY_EVENT;
     class DataReadyEvent;
@@ -105,6 +103,11 @@ protected:
     void customEvent(QEvent*); // This overrides QObject::customEvent()
     void closeEvent(QCloseEvent*); // Overides built-in closeEvent()
     void handleDataReadyEvent(const DataReadyEvent*);
+
+private:
+    void savePrefs();
+    void loadPrefs();
+    void applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGrid);
 
 private:
     std::unique_ptr<DataLogger> dataLogger;
