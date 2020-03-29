@@ -71,10 +71,6 @@ public:
     static long now;
     static int logDataState;
     static bool firstScan;
-    static std::string wlPrivacies[3];
-    static std::string wlCiphers[3];
-    static std::string chan24Freq[15];
-    static std::string chan50Freq[42][2];
     static QFont tblFnt;
     static QString fntSizes[];
     static int numFntSizes;
