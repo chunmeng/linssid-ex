@@ -374,7 +374,8 @@ void MainForm::savePrefs() {
     appPref.plotprefs = {.fntSize = MainForm::tblFnt.pointSize(),
                          .plotlb = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()),
                          .plotub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()),
-                         .showgrid = MainForm::timeGrid->yEnabled()};
+                         .showgrid = MainForm::timeGrid->yEnabled(),
+                         .showLabel = this->plotShowLabel};
     appPref.logData = MainForm::logDataState;
     if (prefsHandler) prefsHandler->save(appPref);
 }
@@ -425,7 +426,7 @@ void MainForm::loadPrefs() {
     bool showGrid = appPref.plotprefs.showgrid;
     applyPlotPrefs(fntSize, plotLb, plotUb, showGrid);
     MainForm::mainFormWidget.mainTableWidget->setFont(tblFnt);
-
+    this->plotShowLabel = appPref.plotprefs.showLabel;
     MainForm::logDataState = appPref.logData;
 }
 

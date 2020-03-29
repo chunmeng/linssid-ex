@@ -14,6 +14,7 @@ using namespace std;
 extern struct passwd *realUser;
 
 namespace {
+// 3.3.1 - Added plotprefs showLabel
 static PrefsHandler::sDefPref defPref = {// default prefs defined here
     /* version  */ LINSSIDPREFSVER,
     /* colwidth */
@@ -32,7 +33,7 @@ static PrefsHandler::sDefPref defPref = {// default prefs defined here
     /* plottab  */ 0,
     /* naptime  */ 2,
     /* plotprefs*/
-    {11, -100, -20, 1}, // added font size
+    {11, -100, -20, 1, 1},
     /* logdata */ 0
 };
 
@@ -88,6 +89,7 @@ void PrefsHandler::save(const sDefPref& prefData)
             << " " << prefData.plotprefs.plotlb
             << " " << prefData.plotprefs.plotub
             << " " << prefData.plotprefs.showgrid
+            << " " << prefData.plotprefs.showLabel
             << endl;
     prefs << "logdata " << prefData.logData << endl;
     prefs.close();
@@ -153,7 +155,7 @@ PrefsHandler::sDefPref PrefsHandler::load()
         } else if (tag == "plotprefs") {
             int fntSize;
             int plotLb, plotUb;
-            lineParse >> fntSize >> plotLb >> plotUb >> prefData.plotprefs.showgrid;
+            lineParse >> fntSize >> plotLb >> plotUb >> prefData.plotprefs.showgrid >> prefData.plotprefs.showLabel;
             // validate or the mess gets big
             if ((plotLb < -100) || (plotUb > 0) || (plotUb < (plotLb + 10))) { // prefs were hosed
                 plotLb = -100;

@@ -9,7 +9,7 @@
 #define	CUSTOM_H
 
 #define LINSSIDVERSION "3.6-ext"
-#define LINSSIDPREFSVER "3.3"
+#define LINSSIDPREFSVER "3.3.1"
 #define LINSSIDDATALOGVER "2.8"
 #define DATAWANTED QEvent::User + 1
 #define DATAREADY QEvent::User + 2
