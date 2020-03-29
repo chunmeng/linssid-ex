@@ -13,7 +13,6 @@
 #define LINSSIDDATALOGVER "2.8"
 #define DATAWANTED QEvent::User + 1
 #define DATAREADY QEvent::User + 2
-#define NUMBER_OF_COLORS 13
 #define MAX_SAMPLES 100
 #define TIME_PLOT_SCALE 100
 #define MAX_TABLE_COLS 21 // as of version 3.6-ext

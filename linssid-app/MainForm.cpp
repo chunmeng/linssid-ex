@@ -95,12 +95,33 @@ string MainForm::chan50Freq[42][2] {
     {"185","4.925"},{"187","4.935"},{"188","4.940"},
     {"189","4.945"},{"192","4.960"},{"196","4.980"}
 };
-QColor MainForm::qColorArray[NUMBER_OF_COLORS]
+
+// Local unnamed namespace
+namespace {
+
+QColor qColorArray[]
 {
     Qt::red, Qt::green, Qt::blue, Qt::darkRed, Qt::darkGreen, Qt::darkBlue,
-            Qt::cyan, Qt::magenta, Qt::gray, Qt::darkCyan, Qt::darkMagenta,
-            Qt::darkYellow, Qt::darkGray
+    Qt::cyan, Qt::magenta, Qt::yellow, Qt::gray, Qt::darkCyan, Qt::darkMagenta,
+    Qt::darkYellow, Qt::darkGray, Qt::lightGray,
+    QColor(255, 0, 0, 127) /* semi-transparent red */,
+    QColor(0, 255, 0, 127) /* semi-transparent green */,
+    QColor(0, 0, 255, 127) /* semi-transparent blue */,
+    QColor(204, 102, 0, 255) /* Orange-range */,
+    QColor(255, 128, 0, 255) /* Orange-range */,
+    QColor(255, 153, 51, 255) /* Orange-range */,
+    QColor(255, 178, 102, 255) /* Orange-range */,
+    QColor(255, 155, 153, 255) /* Orange-range */,
+    QColor(102, 0, 204, 255) /* Purple-range */,
+    QColor(127, 0, 255, 255) /* Purple-range */,
+    QColor(153, 57, 255, 255) /* Purple-range */,
+    QColor(178, 102, 255, 255) /* Purple-range */
 };
+
+constexpr auto NUMBER_OF_COLORS = sizeof(qColorArray)/sizeof(QColor);
+
+};
+
 QFont MainForm::tblFnt( (const QString) "Arial", 11);
 QString MainForm::fntSizes[] = {"10", "11", "12", "14", "16"};
 int MainForm::numFntSizes = 5;

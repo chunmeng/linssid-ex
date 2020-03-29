@@ -75,7 +75,6 @@ public:
     static std::string wlCiphers[3];
     static std::string chan24Freq[15];
     static std::string chan50Freq[42][2];
-    static QColor qColorArray[NUMBER_OF_COLORS];
     static QFont tblFnt;
     static QString fntSizes[];
     static int numFntSizes;
