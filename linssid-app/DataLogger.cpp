@@ -49,29 +49,29 @@ void DataLogger::log(const CellData::Vector& data)
     long entryTime = time(NULL);
     std::strftime(nowStr, 64, "%Y/%m/%d.%H:%M:%S", std::localtime(&entryTime));
     for (unsigned tbi = 0; tbi < data.size(); tbi++) {
-        std::strftime(firstStr, 64, "%Y/%m/%d.%H:%M:%S", std::localtime(&data[tbi]->firstSeen));
-        std::strftime(lastStr, 64, "%Y/%m/%d.%H:%M:%S", std::localtime(&data[tbi]->lastSeen));
+        std::strftime(firstStr, 64, "%Y/%m/%d.%H:%M:%S", std::localtime(&data[tbi].firstSeen));
+        std::strftime(lastStr, 64, "%Y/%m/%d.%H:%M:%S", std::localtime(&data[tbi].lastSeen));
         logDataStream_ << nowStr << "\t"
-                << "\"" << data[tbi]->essid << "\"\t"
-                << data[tbi]->macAddr << "\t"
-                << data[tbi]->channel << "\t"
-                << data[tbi]->mode << "\t"
-                << data[tbi]->protocol << "\t"
-                << data[tbi]->security << "\t"
-                << data[tbi]->privacy << "\t"
-                << data[tbi]->cipher << "\t"
-                << data[tbi]->frequency << "\t"
-                << data[tbi]->quality << "\t"
-                << data[tbi]->signal << "\t"
-                << data[tbi]->load << "\t"
-                << data[tbi]->stationCount << "\t"
-                << data[tbi]->BW << "\t"
-                << data[tbi]->minSignal << "\t"
-                << data[tbi]->maxSignal << "\t"
-                << data[tbi]->cenChan << "\t"
+                << "\"" << data[tbi].essid << "\"\t"
+                << data[tbi].macAddr << "\t"
+                << data[tbi].channel << "\t"
+                << data[tbi].mode << "\t"
+                << data[tbi].protocol << "\t"
+                << data[tbi].security << "\t"
+                << data[tbi].privacy << "\t"
+                << data[tbi].cipher << "\t"
+                << data[tbi].frequency << "\t"
+                << data[tbi].quality << "\t"
+                << data[tbi].signal << "\t"
+                << data[tbi].load << "\t"
+                << data[tbi].stationCount << "\t"
+                << data[tbi].BW << "\t"
+                << data[tbi].minSignal << "\t"
+                << data[tbi].maxSignal << "\t"
+                << data[tbi].cenChan << "\t"
                 << firstStr << "\t"
                 << lastStr << "\t"
-                << "\"" << data[tbi]->vendor << "\"" << endl;
+                << "\"" << data[tbi].vendor << "\"" << endl;
     }
 }
 

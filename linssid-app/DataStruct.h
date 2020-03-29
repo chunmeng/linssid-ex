@@ -45,7 +45,7 @@ class QTableWidgetItem;
 
 // Struct to hold individual AP entry (cell) found
 struct CellData {
-    using Vector = std::vector<std::unique_ptr<CellData>>;
+    using Vector = std::vector<CellData>;
     std::string macAddr;
     std::string essid;
     std::string mode; // master, managed, etc.
