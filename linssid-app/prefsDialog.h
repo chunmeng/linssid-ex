@@ -19,7 +19,7 @@ class prefsDialog : public QDialog {
     Q_OBJECT
 public:
     // int pointsize, int maxplotscale, int min plot scale, 
-    prefsDialog(QString, int, int, bool, int, QObject*);
+    prefsDialog(QString, int, int, bool, bool, int, QObject*);
     virtual ~prefsDialog();
     static sEntryValue entryValue;
 public slots:
@@ -28,10 +28,11 @@ public slots:
     void minSbChanged(int);
     void maxSbChanged(int);
     void gridChanged(int);
+    void showLabelChanged(int);
     void bailOut(int);
     //    void interceptClose(int);
 signals:
-    void plotPrefsChanged(QString, int, int, bool);
+    void plotPrefsChanged(QString, int, int, bool, bool);
 private:
     Ui::prefsDialog widget;
 };

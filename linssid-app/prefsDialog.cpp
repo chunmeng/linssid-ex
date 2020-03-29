@@ -15,15 +15,17 @@ struct sEntryValue {
     int plotMin;
     int plotMax;
     bool showGrid;
+    bool showLabel;
     bool logDataState;
 } prefsDialog::entryValue;
 
-prefsDialog::prefsDialog(QString tblFntSize, int plotMin, int plotMax, bool showGrid, int logDataState, QObject* mommy) {
+prefsDialog::prefsDialog(QString tblFntSize, int plotMin, int plotMax, bool showGrid, bool showLabel, int logDataState, QObject* mommy) {
     widget.setupUi(this);
     prefsDialog::entryValue.tblFntSize = tblFntSize;
     prefsDialog::entryValue.plotMin = plotMin;
     prefsDialog::entryValue.plotMax = plotMax;
     prefsDialog::entryValue.showGrid = showGrid;
+    prefsDialog::entryValue.showLabel = showLabel;
     prefsDialog::entryValue.logDataState = logDataState;
     // now set initial values of widgets in the prefs dialog
     for (int item = 0; item < MainForm::numFntSizes; item++) {
@@ -36,6 +38,7 @@ prefsDialog::prefsDialog(QString tblFntSize, int plotMin, int plotMax, bool show
     widget.dbMinsb->setValue(plotMin);
     widget.dbMaxsb->setValue(plotMax);
     widget.plotGridcbx->setChecked(showGrid);
+    widget.showLabelcbx->setChecked(showLabel);
     widget.logDatacbx->setCheckState((Qt::CheckState) logDataState);
     widget.dbMinsb->setMinimum(-100);
     widget.dbMaxsb->setMaximum(0);
@@ -48,9 +51,10 @@ prefsDialog::prefsDialog(QString tblFntSize, int plotMin, int plotMax, bool show
     connect(prefsDialog::widget.dbMinsb, SIGNAL(valueChanged(int)), this, SLOT(minSbChanged(int)));
     connect(prefsDialog::widget.dbMaxsb, SIGNAL(valueChanged(int)), this, SLOT(maxSbChanged(int)));
     connect(prefsDialog::widget.plotGridcbx, SIGNAL(stateChanged(int)), this, SLOT(gridChanged(int)));
+    connect(prefsDialog::widget.showLabelcbx, SIGNAL(stateChanged(int)), this, SLOT(showLabelChanged(int)));
     connect(prefsDialog::widget.logDatacbx, SIGNAL(stateChanged(int)), mommy, SLOT(logPrefChanged(int)));
-    connect(this, SIGNAL(plotPrefsChanged(QString, int, int, bool)),
-            mommy, SLOT(updatePlotPrefs(QString, int, int, bool)));
+    connect(this, SIGNAL(plotPrefsChanged(QString, int, int, bool, bool)),
+            mommy, SLOT(updatePlotPrefs(QString, int, int, bool, bool)));
     connect(this, SIGNAL(finished(int)), this, SLOT(bailOut(int)));
 }
 
@@ -65,7 +69,8 @@ void prefsDialog::tblFntSizeSbChanged(QString newValue) {
         // plotPrefsChanged(widget.tblFntSizeSb->currentText(),
         widget.dbMinsb->value(),
         widget.dbMaxsb->value(),
-        widget.plotGridcbx->isChecked());
+        widget.plotGridcbx->isChecked(),
+        widget.showLabelcbx->isChecked());
 }
 
 void prefsDialog::minSbChanged(int newValue) {
@@ -73,7 +78,8 @@ void prefsDialog::minSbChanged(int newValue) {
     emit plotPrefsChanged(widget.tblFntSizeSb->currentText(),
         newValue,
         widget.dbMaxsb->value(),
-        widget.plotGridcbx->isChecked());
+        widget.plotGridcbx->isChecked(),
+        widget.showLabelcbx->isChecked());
     widget.dbMaxsb->setMinimum(newValue + 10);
 }
 
@@ -82,7 +88,8 @@ void prefsDialog::maxSbChanged(int newValue) {
     emit plotPrefsChanged(widget.tblFntSizeSb->currentText(),
         widget.dbMinsb->value(),
         newValue,
-        widget.plotGridcbx->isChecked());
+        widget.plotGridcbx->isChecked(),
+        widget.showLabelcbx->isChecked());
     widget.dbMinsb->setMaximum(newValue - 10);
 }
 
@@ -91,10 +98,20 @@ void prefsDialog::gridChanged(int newValue) {
     emit plotPrefsChanged(widget.tblFntSizeSb->currentText(),
         widget.dbMinsb->value(),
         widget.dbMaxsb->value(),
+        newValue,
+        widget.showLabelcbx->isChecked());
+}
+
+void prefsDialog::showLabelChanged(int newValue) {
+
+    emit plotPrefsChanged(widget.tblFntSizeSb->currentText(),
+        widget.dbMinsb->value(),
+        widget.dbMaxsb->value(),
+        widget.plotGridcbx->isChecked(),
         newValue);
 }
 
 void prefsDialog::bailOut(int result) {
     if (result == 0)
-        emit plotPrefsChanged(entryValue.tblFntSize, entryValue.plotMin, entryValue.plotMax, entryValue.showGrid);
+        emit plotPrefsChanged(entryValue.tblFntSize, entryValue.plotMin, entryValue.plotMax, entryValue.showGrid, entryValue.showLabel);
 }

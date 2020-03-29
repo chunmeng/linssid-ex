@@ -95,7 +95,7 @@ public slots:
     void showAboutBox();
     void showPrefsDlg();
     void columnWidthSave(int, int, int);
-    void updatePlotPrefs(QString, int, int, bool);
+    void updatePlotPrefs(QString, int, int, bool, bool);
     void logPrefChanged(int);
 
 protected:
@@ -115,6 +115,8 @@ private:
     std::unique_ptr<PrefsHandler> prefsHandler;
     std::unique_ptr<QLabel> statusCounts;
     Stats stats;
+
+    bool plotShowLabel = true;
 };
 
 #endif	/* _MAINFORM_H */

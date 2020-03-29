@@ -337,9 +337,10 @@ void MainForm::applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGr
     MainForm::chan5Grid->enableY(showGrid);
 }
 
-void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, bool showGrid) {
+void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, bool showGrid, bool showLabel) {
     // a slot called from the prefs dialog to dynamically update the plots
     applyPlotPrefs(tblFntSize.toInt(), plotMin, plotMax, showGrid);
+    this->plotShowLabel = showLabel;
     MainForm::reDrawTable();
     MainForm::mainFormWidget.timePlot->replot();
     MainForm::mainFormWidget.chan24Plot->replot();
@@ -494,6 +495,7 @@ void MainForm::showPrefsDlg() {
             int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()),
             int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()),
             MainForm::timeGrid->yEnabled(),
+            this->plotShowLabel,
             MainForm::logDataState,
             (QObject*)this);
     prefsDlg->exec();
@@ -732,6 +734,19 @@ void MainForm::fillPlots() {
 
             MainForm::cellDataRay[tbi]->pChanSymbol->setColor(MainForm::cellDataRay[tbi]->color);
             MainForm::cellDataRay[tbi]->pChanSymbol->setSize(10, 10);
+
+            if (this->plotShowLabel) {
+                QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi]->essid);
+                markerLabel.setColor(MainForm::cellDataRay[tbi]->color);
+                int ub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound());
+                if (MainForm::cellDataRay[tbi]->signal <= ub - 5)
+                    MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignTop);
+                else MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignBottom);
+                MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabel(markerLabel);
+            } else {
+                MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabel(QwtText(""));
+            }
+
             if (MainForm::cellDataRay[tbi]->firstPlot) {
                 resolveMesh(tbi);
                 if (MainForm::cellDataRay[tbi]->frequency.substr(0, 1) == "2") {
@@ -741,15 +756,6 @@ void MainForm::fillPlots() {
                     MainForm::cellDataRay[tbi]->pBandCurve->attach(MainForm::mainFormWidget.chan5Plot);
                     MainForm::cellDataRay[tbi]->pCntlChanPlot->attach(MainForm::mainFormWidget.chan5Plot);
                 }
-                // @TODO Add prefs to enable/disable label on plot
-                QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi]->essid);
-                markerLabel.setColor(MainForm::cellDataRay[tbi]->color);
-                int ub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound());
-                if (MainForm::cellDataRay[tbi]->signal <= ub - 5)
-                    MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignTop);
-                else MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignBottom);
-                MainForm::cellDataRay[tbi]->pCntlChanPlot->setLabel(markerLabel);
-
                 MainForm::cellDataRay[tbi]->firstPlot = false;
             }
         } else {
