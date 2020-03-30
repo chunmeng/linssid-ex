@@ -80,8 +80,8 @@ namespace {
 QColor qColorArray[]
 {
     Qt::red, Qt::green, Qt::blue, Qt::darkRed, Qt::darkGreen, Qt::darkBlue,
-    Qt::cyan, Qt::magenta, Qt::yellow, Qt::gray, Qt::darkCyan, Qt::darkMagenta,
-    Qt::darkYellow, Qt::darkGray, Qt::lightGray,
+    Qt::cyan, Qt::magenta, Qt::gray, Qt::darkCyan, Qt::darkMagenta,
+    Qt::darkYellow, Qt::darkGray,
     QColor(255, 0, 0, 127) /* semi-transparent red */,
     QColor(0, 255, 0, 127) /* semi-transparent green */,
     QColor(0, 0, 255, 127) /* semi-transparent blue */,
@@ -93,7 +93,15 @@ QColor qColorArray[]
     QColor(102, 0, 204, 255) /* Purple-range */,
     QColor(127, 0, 255, 255) /* Purple-range */,
     QColor(153, 57, 255, 255) /* Purple-range */,
-    QColor(178, 102, 255, 255) /* Purple-range */
+    QColor(178, 102, 255, 255) /* Purple-range */,
+    QColor(204, 0, 204, 255),
+    QColor(255, 0, 255, 255),
+    QColor(255, 51, 255, 255),
+    QColor(255, 102, 255, 255),
+    QColor(0, 102, 204, 255),
+    QColor(0, 128, 255, 255),
+    QColor(51, 153, 255, 255),
+    QColor(102, 178, 255, 255),
 };
 
 constexpr auto NUMBER_OF_COLORS = sizeof(qColorArray)/sizeof(QColor);
@@ -870,6 +878,7 @@ void MainForm::initNewCell(string macAddress, int tbi) {
 }
 
 void MainForm::extractData(string tl, int &tbi, int &newBSS) {
+    // std::cout << "Dump: " << tl << endl;
     // extract the information from each line recovered from the pipe from getter
     boost::smatch sm;
     if (boost::regex_match(tl, sm, boost::regex("^BSS.*?(([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}).*",
