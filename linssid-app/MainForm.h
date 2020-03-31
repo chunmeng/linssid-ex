@@ -105,6 +105,7 @@ private:
     void applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGrid);
 
 private:
+    std::unique_ptr<QStandardItemModel> model_;
     std::unique_ptr<DataLogger> dataLogger;
     std::unique_ptr<VendorDb> vendorDb;
     std::unique_ptr<PrefsHandler> prefsHandler;

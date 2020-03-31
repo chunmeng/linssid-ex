@@ -41,7 +41,7 @@ struct History {
 class QwtPlotCurve;
 class QwtSymbol;
 class QwtPlotMarker;
-class QTableWidgetItem;
+class QStandardItem;
 
 // Struct to hold individual AP entry (cell) found
 struct CellData {
@@ -77,7 +77,7 @@ struct CellData {
     // @NOTE: pChanSymbol will be given to and owned by pCntlChanPlot. ~QwtPlotMarker free the memory
     QwtSymbol* pChanSymbol;
     std::unique_ptr<QwtPlotCurve> pTimeCurve;
-    std::unique_ptr<QTableWidgetItem> pTableItem[MAX_TABLE_COLS];
+    std::unique_ptr<QStandardItem> pTableItem[MAX_TABLE_COLS];
     std::unique_ptr<History> pHistory;
     int timesSeen; // believe it or not, some drivers report a MAC more than once per scan
 };
