@@ -28,6 +28,7 @@ public:
         int plotlb;
         int plotub;
         bool showgrid;
+        bool showLabel;
     };
 
     struct sDefPref {

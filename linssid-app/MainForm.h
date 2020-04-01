@@ -40,8 +40,6 @@ public:
     void addInterfaces();
     void setInterface(int);
     int getNapTime();
-    void savePrefs();
-    void loadPrefs();
     std::string getCurrentInterface();
     static const QEvent::Type DATA_READY_EVENT;
     class DataReadyEvent;
@@ -73,11 +71,6 @@ public:
     static long now;
     static int logDataState;
     static bool firstScan;
-    static std::string wlPrivacies[3];
-    static std::string wlCiphers[3];
-    static std::string chan24Freq[15];
-    static std::string chan50Freq[42][2];
-    static QColor qColorArray[NUMBER_OF_COLORS];
     static QFont tblFnt;
     static QString fntSizes[];
     static int numFntSizes;
@@ -97,7 +90,7 @@ public slots:
     void showAboutBox();
     void showPrefsDlg();
     void columnWidthSave(int, int, int);
-    void updatePlotPrefs(QString, int, int, bool);
+    void updatePlotPrefs(QString, int, int, bool, bool);
     void logPrefChanged(int);
 
 protected:
@@ -107,11 +100,18 @@ protected:
     void handleDataReadyEvent(const DataReadyEvent*);
 
 private:
+    void savePrefs();
+    void loadPrefs();
+    void applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGrid);
+
+private:
     std::unique_ptr<DataLogger> dataLogger;
     std::unique_ptr<VendorDb> vendorDb;
     std::unique_ptr<PrefsHandler> prefsHandler;
     std::unique_ptr<QLabel> statusCounts;
     Stats stats;
+
+    bool plotShowLabel = true;
 };
 
 #endif	/* _MAINFORM_H */
