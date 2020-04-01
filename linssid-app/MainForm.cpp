@@ -768,6 +768,7 @@ void MainForm::fillPlots() {
             }
         } else {
             MainForm::cellDataRay[tbi].pChanSymbol->setStyle(QwtSymbol::NoSymbol);
+            MainForm::cellDataRay[tbi].pCntlChanPlot->setLabel(QwtText(""));
         }
         
         // then the 2.5GHz and 5GHz channel vs signal plots
