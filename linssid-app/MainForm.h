@@ -30,6 +30,7 @@ class PrefsHandler;
 class prefsDialog;
 
 class QStandardItemModel;
+class DataProxyModel;
 
 class MainForm : public QMainWindow {
     Q_OBJECT
@@ -108,6 +109,7 @@ private:
     void applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGrid);
 
 private:
+    std::unique_ptr<DataProxyModel> proxyModel_;
     std::unique_ptr<QStandardItemModel> model_;
     std::unique_ptr<DataLogger> dataLogger;
     std::unique_ptr<VendorDb> vendorDb;

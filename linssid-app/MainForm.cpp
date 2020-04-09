@@ -47,6 +47,7 @@
 #include "DataLogger.h"
 #include "PrefsHandler.h"
 #include "VendorDb.h"
+#include "DataProxyModel.h"
 
 extern int lastBlockRequested;
 extern int lastBlockReceived;
@@ -153,7 +154,9 @@ MainForm::MainForm() {
     model_->setHorizontalHeaderLabels(
             QString("Plot|SSID|MAC|Channel|Mode|Security|Privacy|Cipher|Frequency\
 |Quality|Signal|Load|Station Count|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
-    MainForm::mainFormWidget.mainTableView->setModel(model_.get());
+    proxyModel_ = make_unique<DataProxyModel>();
+    proxyModel_->setSourceModel(model_.get());
+    MainForm::mainFormWidget.mainTableView->setModel(proxyModel_.get());
 
     // connect(model_, SIGNAL(itemChanged(int,int)), this, SLOT(doTableChanged(int,int)));
     connect(MainForm::mainFormWidget.mainTableView->horizontalHeader(),
