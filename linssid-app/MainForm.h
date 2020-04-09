@@ -19,14 +19,17 @@
 #include <qwt_plot_grid.h>
 #include <qwt_scale_draw.h>
 #include "ui_MainForm.h"
-#include "prefsDialog.h"
 #include "Custom.h"
 #include "DataStruct.h"
-#include "DataLogger.h"
-#include "PrefsHandler.h"
-#include "VendorDb.h"
 
-class Getter; // forward declare
+// forward declare
+class Getter;
+class DataLogger;
+class VendorDb;
+class PrefsHandler;
+class prefsDialog;
+
+class QStandardItemModel;
 
 class MainForm : public QMainWindow {
     Q_OBJECT

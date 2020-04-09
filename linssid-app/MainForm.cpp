@@ -44,6 +44,9 @@
 #include "prefsDialog.h"
 #include "ui_MainForm.h"
 #include "Utils.h"
+#include "DataLogger.h"
+#include "PrefsHandler.h"
+#include "VendorDb.h"
 
 extern int lastBlockRequested;
 extern int lastBlockReceived;
