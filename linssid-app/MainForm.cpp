@@ -545,6 +545,7 @@ void MainForm::closeEvent(QCloseEvent * event) {
     MainForm::mainFormWidget.statusTxt->repaint();
     while (runState != STOPPED) usleep(500 * 1000); // wait until getter is stopped
     pGetterThread->QThread::quit();
+    MainForm::cellDataRay.clear();
     savePrefs();
     pGetterThread->QThread::wait();
     MainForm::mainFormWidget.statusTxt->setText("Closing ...");
