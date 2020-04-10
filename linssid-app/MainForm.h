@@ -28,6 +28,7 @@ class DataLogger;
 class VendorDb;
 class PrefsHandler;
 class prefsDialog;
+class ViewFilterDialog;
 
 class QStandardItemModel;
 class DataProxyModel;
@@ -83,7 +84,6 @@ public:
     std::unique_ptr<QwtPlotGrid> chan24Grid;
     std::unique_ptr<QwtPlotGrid> chan5Grid;
     std::unique_ptr<QwtPlotGrid> timeGrid;
-    std::unique_ptr<prefsDialog> prefsDlg;
 
 public slots:
     void doRun();
@@ -93,6 +93,7 @@ public slots:
     void reDrawTable();
     void showAboutBox();
     void showPrefsDlg();
+    void showViewFilterDlg();
     void columnWidthSave(int, int, int);
     void updatePlotPrefs(QString, int, int, bool, bool);
     void logPrefChanged(int);
@@ -109,6 +110,9 @@ private:
     void applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGrid);
 
 private:
+    std::unique_ptr<prefsDialog> prefsDlg;
+    std::unique_ptr<ViewFilterDialog> viewFilterDlg_;
+
     std::unique_ptr<DataProxyModel> proxyModel_;
     std::unique_ptr<QStandardItemModel> model_;
     std::unique_ptr<DataLogger> dataLogger;

@@ -48,6 +48,7 @@
 #include "PrefsHandler.h"
 #include "VendorDb.h"
 #include "DataProxyModel.h"
+#include "ViewFilterDialog.h"
 
 extern int lastBlockRequested;
 extern int lastBlockReceived;
@@ -147,6 +148,7 @@ MainForm::MainForm() {
     connect(MainForm::mainFormWidget.actionType, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionAbout, SIGNAL(triggered()), this, SLOT(showAboutBox()));
     connect(MainForm::mainFormWidget.actionPrefs, SIGNAL(triggered()), this, SLOT(showPrefsDlg()));
+    connect(MainForm::mainFormWidget.actionViewFilter, SIGNAL(triggered()), this, SLOT(showViewFilterDlg()));
 
     model_ = make_unique<QStandardItemModel>();
     model_->setColumnCount(MAX_TABLE_COLS);
@@ -158,6 +160,7 @@ MainForm::MainForm() {
     proxyModel_->setSourceModel(model_.get());
     MainForm::mainFormWidget.mainTableView->setModel(proxyModel_.get());
 
+    // @FIXME: How to connect standard item change?
     // connect(model_, SIGNAL(itemChanged(int,int)), this, SLOT(doTableChanged(int,int)));
     connect(MainForm::mainFormWidget.mainTableView->horizontalHeader(),
             SIGNAL(sectionResized(int, int, int)), this, SLOT(columnWidthSave(int, int, int)));
@@ -522,6 +525,17 @@ void MainForm::showPrefsDlg() {
             (QObject*)this);
     prefsDlg->exec();
     prefsDlg.reset();
+}
+
+void MainForm::showViewFilterDlg() {
+    // Make a modeless dialog
+    if (viewFilterDlg_ == nullptr) {// already a prefs dialog open somewhere...
+        viewFilterDlg_ = make_unique<ViewFilterDialog>((QObject*)this->proxyModel_.get());
+    }
+
+    viewFilterDlg_->show();
+    viewFilterDlg_->raise();
+    viewFilterDlg_->activateWindow();
 }
 
 void MainForm::columnWidthSave(int col, int oldWidth, int newWidth) {

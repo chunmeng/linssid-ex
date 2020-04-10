@@ -7,7 +7,7 @@ using namespace std;
 DataProxyModel::DataProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
     , showBand5G_(true)
-    , showBand24G_(false)
+    , showBand24G_(true)
 {
 }
 
