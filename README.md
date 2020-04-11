@@ -1,25 +1,29 @@
-# linssid
+# linssid-ex
 
-This is a copy of the LinSSID (https://sourceforge.net/projects/linssid/) with intention to extend some functionalities.
+This is LinSSID with extended functionalities.
+The initial source is based on LinSSID 3.6. (https://sourceforge.net/projects/linssid/).
 
 ## New Features Added
 - New columns for BSS load and station count
 - Status bar with counts of total, hidden and open AP
 - Show ESSID as label on plot, align to the marker
-- Filter the BSS list by band
+- Filter the BSS list by band, plots based on filter result
 
 ![ScreenShot](/screenshots/latest.png?raw=true "Current Application View")
 
-## Future Features
-- Filter by MAC
-- Filter by SSID
-- Filter by channel
-- Update chart/plots based on filter result
+## TODO
+- Add filter by MAC
+- Add filter by SSID
+- Add filter by channel
+- Add user preference/option to allow plotting of filtered row
+- Align the view filter dialog to main form 
 - Save filter setting to preference
+- Rework time graph (add ESSID label)
+- Add column for AP capability 
 
 ## Build Requirement
 
-Install deps and build according to insruction in linssid-app/INSTALL.txt
+Install deps and build according to instruction in linssid-app/INSTALL.txt
 
 ```
 sudo apt-get install -y \
