@@ -6,12 +6,13 @@ This is a copy of the LinSSID (https://sourceforge.net/projects/linssid/) with i
 - New columns for BSS load and station count
 - Status bar with counts of total, hidden and open AP
 - Show ESSID as label on plot, align to the marker
+- Filter the BSS list by band
 
 ## WIP/Pending Features
-- Filter by band
 - Filter by MAC
 - Filter by SSID
 - Filter by channel
+- Save filter setting to preference
 
 ## Build Requirement
 
