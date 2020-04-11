@@ -109,6 +109,7 @@ private:
     void savePrefs();
     void loadPrefs();
     void applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGrid);
+    bool shouldBePlot(int tbi);
 
 private:
     std::unique_ptr<prefsDialog> prefsDlg;

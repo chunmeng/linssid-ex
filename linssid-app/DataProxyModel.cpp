@@ -35,3 +35,10 @@ QVariant DataProxyModel::headerData(int section, Qt::Orientation orientation,
     return sourceModel()->headerData(section, orientation,
                                      role);
 }
+
+bool DataProxyModel::isFiltered(int sourceRow) const
+{
+    if (!mapFromSource(sourceModel()->index(sourceRow, 0)).isValid()) // source model row is filtered
+        return true;
+    return false;
+}

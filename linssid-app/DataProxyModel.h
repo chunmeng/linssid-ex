@@ -8,10 +8,11 @@ class DataProxyModel : public QSortFilterProxyModel
     Q_OBJECT
 public:
     DataProxyModel(QObject* parent = 0);
-    bool filterAcceptsRow(int source_row,
-                          const QModelIndex &source_parent) const;
+    bool filterAcceptsRow(int sourceRow,
+                          const QModelIndex &sourceParent) const;
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role) const;
+    bool isFiltered(int sourceRow) const;
 
 public slots:
     void setBand(bool show5G, bool show24G);

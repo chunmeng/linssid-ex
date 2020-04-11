@@ -760,7 +760,7 @@ void MainForm::fillPlots() {
             MainForm::blockSampleTime, 10);
     for (int tbi = 0; tbi <= maxTableIndex; tbi++) {
         // first attach plots plots we couldn't before because of sparse data
-        if (MainForm::cellDataRay[tbi].pTableItem[PLOT]->checkState() == Qt::Checked) {
+        if (shouldBePlot(tbi)) {
             if (MainForm::cellDataRay[tbi].BW >= 40)
                 MainForm::cellDataRay[tbi].pChanSymbol->setStyle(QwtSymbol::Diamond);
             else MainForm::cellDataRay[tbi].pChanSymbol->setStyle(QwtSymbol::Triangle);
@@ -805,7 +805,7 @@ void MainForm::fillPlots() {
         MainForm::cellDataRay[tbi].yPlot[0] = MainForm::cellDataRay[tbi].yPlot[3] = -100.0;
         MainForm::cellDataRay[tbi].yPlot[1] = MainForm::cellDataRay[tbi].yPlot[2]
                 = MainForm::cellDataRay[tbi].signal;
-        if (MainForm::cellDataRay[tbi].pTableItem[PLOT]->checkState() == Qt::Checked) {
+        if (shouldBePlot(tbi)) {
             MainForm::cellDataRay[tbi].pBandCurve->setRawSamples(MainForm::cellDataRay[tbi].xPlot,
                     MainForm::cellDataRay[tbi].yPlot, 4);
                 // here we plot a point for the control channel
@@ -826,7 +826,7 @@ void MainForm::fillPlots() {
             ixLength = MAX_SAMPLES;
             ixStart = numSamples % MAX_SAMPLES;
         }
-        if (MainForm::cellDataRay[tbi].pTableItem[PLOT]->checkState() == Qt::Checked) {
+        if (shouldBePlot(tbi)) {
             MainForm::cellDataRay[tbi].pTimeCurve->setRawSamples(
                     &(MainForm::cellDataRay[tbi].pHistory->sampleSec[ixStart]),
                     &(MainForm::cellDataRay[tbi].pHistory->signal[ixStart]), ixLength);
@@ -838,6 +838,14 @@ void MainForm::fillPlots() {
     MainForm::mainFormWidget.chan24Plot->replot();
     MainForm::mainFormWidget.chan5Plot->replot();
     MainForm::mainFormWidget.timePlot->replot();
+}
+
+bool MainForm::shouldBePlot(int tbi)
+{
+    if (MainForm::cellDataRay[tbi].pTableItem[PLOT]->checkState() == Qt::Checked &&
+        !proxyModel_->isFiltered(tbi)) // @TODO: Add a pref to allow plotting filtered table row
+        return true;
+    return false;
 }
 
 void MainForm::resolveMesh(int tbi) {
