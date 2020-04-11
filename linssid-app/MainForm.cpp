@@ -44,6 +44,11 @@
 #include "prefsDialog.h"
 #include "ui_MainForm.h"
 #include "Utils.h"
+#include "DataLogger.h"
+#include "PrefsHandler.h"
+#include "VendorDb.h"
+#include "DataProxyModel.h"
+#include "ViewFilterDialog.h"
 
 extern int lastBlockRequested;
 extern int lastBlockReceived;
@@ -120,8 +125,6 @@ MainForm::MainForm() {
     connect(MainForm::mainFormWidget.runBtn, SIGNAL(clicked()), this, SLOT(doRun()));
     connect(MainForm::mainFormWidget.allBtn, SIGNAL(clicked()), this, SLOT(doPlotAll()));
     connect(MainForm::mainFormWidget.noneBtn, SIGNAL(clicked()), this, SLOT(doPlotNone()));
-    connect(MainForm::mainFormWidget.mainTableWidget, SIGNAL(cellChanged(int,int)),
-        this,SLOT(doTableChanged(int,int)));
     connect(MainForm::mainFormWidget.actionSSID, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionMAC, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionChannel, SIGNAL(changed()), this, SLOT(reDrawTable()));
@@ -145,7 +148,21 @@ MainForm::MainForm() {
     connect(MainForm::mainFormWidget.actionType, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionAbout, SIGNAL(triggered()), this, SLOT(showAboutBox()));
     connect(MainForm::mainFormWidget.actionPrefs, SIGNAL(triggered()), this, SLOT(showPrefsDlg()));
-    connect(MainForm::mainFormWidget.mainTableWidget->horizontalHeader(),
+    connect(MainForm::mainFormWidget.actionViewFilter, SIGNAL(triggered()), this, SLOT(showViewFilterDlg()));
+
+    model_ = make_unique<QStandardItemModel>();
+    model_->setColumnCount(MAX_TABLE_COLS);
+    // Make sure the column labels below are same order as the enum <colTitle>
+    model_->setHorizontalHeaderLabels(
+            QString("Plot|SSID|MAC|Channel|Mode|Security|Privacy|Cipher|Frequency\
+|Quality|Signal|Load|Station Count|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
+    proxyModel_ = make_unique<DataProxyModel>();
+    proxyModel_->setSourceModel(model_.get());
+    MainForm::mainFormWidget.mainTableView->setModel(proxyModel_.get());
+
+    // @FIXME: How to connect standard item change?
+    // connect(model_, SIGNAL(itemChanged(int,int)), this, SLOT(doTableChanged(int,int)));
+    connect(MainForm::mainFormWidget.mainTableView->horizontalHeader(),
             SIGNAL(sectionResized(int, int, int)), this, SLOT(columnWidthSave(int, int, int)));
 
     MainForm::cellDataRay.reserve(50); // expect about 50 cells to be found. More or less is OK.
@@ -363,15 +380,15 @@ void MainForm::savePrefs() {
     appPref.version = LINSSIDPREFSVER;
     // col number must match the enum in "custom.h"
     for (int col = 0; col < MAX_TABLE_COLS; col++) {
-        int colWidth = mainFormWidget.mainTableWidget->columnWidth(col);
+        int colWidth = mainFormWidget.mainTableView->columnWidth(col);
         appPref.colwidth[col] = (colWidth == 0) ? columnWidth[col] : colWidth;
     }
     for (int col = 0; col < MAX_TABLE_COLS; col++)
-        appPref.colvis[col] = !mainFormWidget.mainTableWidget->isColumnHidden(col);
+        appPref.colvis[col] = !mainFormWidget.mainTableView->isColumnHidden(col);
     for (int visCol = 0; visCol < MAX_TABLE_COLS; visCol++)
-        appPref.visorder[visCol] = mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(visCol);
-    appPref.sort = {.column = MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->sortIndicatorSection(),
-                    .order = MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->sortIndicatorOrder()};
+        appPref.visorder[visCol] = mainFormWidget.mainTableView->horizontalHeader()->logicalIndex(visCol);
+    appPref.sort = {.column = MainForm::mainFormWidget.mainTableView->horizontalHeader()->sortIndicatorSection(),
+                    .order = MainForm::mainFormWidget.mainTableView->horizontalHeader()->sortIndicatorOrder()};
     appPref.maingeom = {.x = this->x(), .y = this->y(),
                         .width = this->width(), .height = this->height()};
     appPref.mainsplit = {.topheight = MainForm::mainFormWidget.splitter->sizes().value(0),
@@ -393,7 +410,7 @@ void MainForm::loadPrefs() {
 
     for (int col = 0; col < MAX_TABLE_COLS; col++) {
         if (appPref.colwidth[col] > 0) {
-            MainForm::mainFormWidget.mainTableWidget->setColumnWidth(col, appPref.colwidth[col]);
+            MainForm::mainFormWidget.mainTableView->setColumnWidth(col, appPref.colwidth[col]);
             columnWidth[col] = appPref.colwidth[col];
         }
     }
@@ -401,21 +418,21 @@ void MainForm::loadPrefs() {
     for (int col = 0; col < MAX_TABLE_COLS; col++) {
         bool vis = appPref.colvis[col];
         MainForm::colToQAction[col]->setChecked(vis);
-        MainForm::mainFormWidget.mainTableWidget->setColumnHidden(col, !vis);
+        MainForm::mainFormWidget.mainTableView->setColumnHidden(col, !vis);
     }
 
     if (appPref.sort.column >= 0 && appPref.sort.column < MAX_TABLE_COLS) {
-        MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->setSortIndicator(appPref.sort.column, Qt::SortOrder(appPref.sort.order));
+        MainForm::mainFormWidget.mainTableView->horizontalHeader()->setSortIndicator(appPref.sort.column, Qt::SortOrder(appPref.sort.order));
     }
 
     this->setGeometry(appPref.maingeom.x, appPref.maingeom.y, appPref.maingeom.width, appPref.maingeom.height);
 
     for (int i = 0; i < MAX_TABLE_COLS - 1; i++) { // loop through visual order
-        if (appPref.visorder[i] != mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(i)) {
+        if (appPref.visorder[i] != mainFormWidget.mainTableView->horizontalHeader()->logicalIndex(i)) {
             // find the index of the visual column that has the desired logical column
             for (int j = i + 1; j < MAX_TABLE_COLS; j++) { // and swap
-                if (appPref.visorder[i] == mainFormWidget.mainTableWidget->horizontalHeader()->logicalIndex(j)) {
-                    mainFormWidget.mainTableWidget->horizontalHeader()->swapSections(i, j);
+                if (appPref.visorder[i] == mainFormWidget.mainTableView->horizontalHeader()->logicalIndex(j)) {
+                    mainFormWidget.mainTableView->horizontalHeader()->swapSections(i, j);
                     break;
                 }
             }
@@ -432,7 +449,7 @@ void MainForm::loadPrefs() {
     int plotUb = appPref.plotprefs.plotub;
     bool showGrid = appPref.plotprefs.showgrid;
     applyPlotPrefs(fntSize, plotLb, plotUb, showGrid);
-    MainForm::mainFormWidget.mainTableWidget->setFont(tblFnt);
+    MainForm::mainFormWidget.mainTableView->setFont(tblFnt);
     this->plotShowLabel = appPref.plotprefs.showLabel;
     MainForm::logDataState = appPref.logData;
 }
@@ -510,6 +527,17 @@ void MainForm::showPrefsDlg() {
     prefsDlg.reset();
 }
 
+void MainForm::showViewFilterDlg() {
+    // Make a modeless dialog
+    if (viewFilterDlg_ == nullptr) {// already a prefs dialog open somewhere...
+        viewFilterDlg_ = make_unique<ViewFilterDialog>((QObject*)this->proxyModel_.get());
+    }
+
+    viewFilterDlg_->show();
+    viewFilterDlg_->raise();
+    viewFilterDlg_->activateWindow();
+}
+
 void MainForm::columnWidthSave(int col, int oldWidth, int newWidth) {
     if (newWidth > 0) MainForm::columnWidth[col] = newWidth;
     else if (oldWidth > 0) MainForm::columnWidth[col] = oldWidth;
@@ -531,6 +559,7 @@ void MainForm::closeEvent(QCloseEvent * event) {
     MainForm::mainFormWidget.statusTxt->repaint();
     while (runState != STOPPED) usleep(500 * 1000); // wait until getter is stopped
     pGetterThread->QThread::quit();
+    MainForm::cellDataRay.clear();
     savePrefs();
     pGetterThread->QThread::wait();
     MainForm::mainFormWidget.statusTxt->setText("Closing ...");
@@ -544,72 +573,66 @@ void MainForm::closeEvent(QCloseEvent * event) {
 }
 
 void MainForm::drawTable() {
-
-    MainForm::mainFormWidget.mainTableWidget->setColumnCount(MAX_TABLE_COLS);
-    MainForm::mainFormWidget.mainTableWidget->setRowCount(MainForm::maxTableIndex + 1);
-    // Make sure the column labels below are same order as the enum <colTitle>
-    MainForm::mainFormWidget.mainTableWidget->setHorizontalHeaderLabels(
-            QString("Plot|SSID|MAC|Channel|Mode|Security|Privacy|Cipher|Frequency\
-|Quality|Signal|Load|Station Count|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
+    model_->setRowCount(MainForm::maxTableIndex + 1);
     setVisibleCols();
-    MainForm::mainFormWidget.mainTableWidget->horizontalHeader()->setSectionsMovable(true);
-    MainForm::mainFormWidget.mainTableWidget->horizontalHeader()
+    MainForm::mainFormWidget.mainTableView->horizontalHeader()->setSectionsMovable(true);
+    MainForm::mainFormWidget.mainTableView->horizontalHeader()
             ->setToolTip("Click to sort\nDrag and Drop to re-order\nClick and drag divider to fit");
-    MainForm::mainFormWidget.mainTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    MainForm::mainFormWidget.mainTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
 void MainForm::setVisibleCols() {
     // the Plot column is always visible
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(SSID,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(SSID,
             !(MainForm::mainFormWidget.actionSSID->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(MAC,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(MAC,
             !(MainForm::mainFormWidget.actionMAC->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(CHANNEL,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(CHANNEL,
             !(MainForm::mainFormWidget.actionChannel->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(MODE,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(MODE,
             !(MainForm::mainFormWidget.actionMode->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(PROTOCOL,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(PROTOCOL,
             !(MainForm::mainFormWidget.actionProtocol->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(SECURITY,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(SECURITY,
             !(MainForm::mainFormWidget.actionSecurity->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(PRIVACY,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(PRIVACY,
             !(MainForm::mainFormWidget.actionPrivacy->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(CIPHER,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(CIPHER,
             !(MainForm::mainFormWidget.actionCipher->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(FREQUENCY,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(FREQUENCY,
             !(MainForm::mainFormWidget.actionFrequency->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(QUALITY,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(QUALITY,
             !(MainForm::mainFormWidget.actionQuality->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(SIGNAL,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(SIGNAL,
             !(MainForm::mainFormWidget.actionSignal->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(LOAD,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(LOAD,
             !(MainForm::mainFormWidget.actionLoad->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(STATION_COUNT,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(STATION_COUNT,
             !(MainForm::mainFormWidget.actionStationCount->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(BW,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(BW,
             !(MainForm::mainFormWidget.actionBW->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(MINSIGNAL,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(MINSIGNAL,
             !(MainForm::mainFormWidget.actionMin_Signal->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(MAXSIGNAL,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(MAXSIGNAL,
             !(MainForm::mainFormWidget.actionMax_Signal->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(CENCHAN,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(CENCHAN,
             !(MainForm::mainFormWidget.actionCenChan->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(FIRST_SEEN,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(FIRST_SEEN,
             !(MainForm::mainFormWidget.actionFirst_Seen->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(LAST_SEEN,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(LAST_SEEN,
             !(MainForm::mainFormWidget.actionLast_Seen->isChecked()));
-    MainForm::mainFormWidget.mainTableWidget->setColumnHidden(VENDOR,
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(VENDOR,
             !(MainForm::mainFormWidget.actionVendor->isChecked()));
+    MainForm::mainFormWidget.mainTableView->setColumnHidden(TYPE, true); // Not implemented. Always hide
 }
 
 void MainForm::fillTable() {
     MainForm::stats.reset();
-    MainForm::mainFormWidget.mainTableWidget->setFont(tblFnt);
+    MainForm::mainFormWidget.mainTableView->setFont(tblFnt);
     
     // fill in the x-y, also set each cell text alignment
-    MainForm::mainFormWidget.mainTableWidget->setRowCount(maxTableIndex + 1);
+    model_->setRowCount(maxTableIndex + 1);
     for (int row = 0; row <= maxTableIndex; row++) {
-        MainForm::cellDataRay[row].pTableItem[PLOT]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[SSID]->
                 setText(MainForm::cellDataRay[row].essid.c_str());
         if (MainForm::cellDataRay[row].essid == "<hidden>") MainForm::stats.totalHidden++;
@@ -617,7 +640,7 @@ void MainForm::fillTable() {
                 setText(MainForm::cellDataRay[row].macAddr.c_str());
         MainForm::cellDataRay[row].pTableItem[MAC]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[CHANNEL]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].channel);
+                setData(MainForm::cellDataRay[row].channel,Qt::DisplayRole);
         if (MainForm::cellDataRay[row].channel <= 14) MainForm::stats.total2GBss++;
         else MainForm::stats.total5GBss++;
         MainForm::cellDataRay[row].pTableItem[CHANNEL]->setTextAlignment(Qt::AlignCenter);
@@ -641,28 +664,30 @@ void MainForm::fillTable() {
                 setText(MainForm::cellDataRay[row].frequency.c_str());
         MainForm::cellDataRay[row].pTableItem[FREQUENCY]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[QUALITY]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].quality);
+                setData(MainForm::cellDataRay[row].quality, Qt::DisplayRole);
         MainForm::cellDataRay[row].pTableItem[QUALITY]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[SIGNAL]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].signal);
+                setData(MainForm::cellDataRay[row].signal, Qt::DisplayRole);
         MainForm::cellDataRay[row].pTableItem[SIGNAL]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[LOAD]->
-                setText((MainForm::cellDataRay[row].load < 0) ? "-" : QString::number(MainForm::cellDataRay[row].load));
+                setData((MainForm::cellDataRay[row].load < 0) ? QVariant("-") : QVariant(MainForm::cellDataRay[row].load),
+                        Qt::DisplayRole);
         MainForm::cellDataRay[row].pTableItem[LOAD]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[STATION_COUNT]->
-                setText((MainForm::cellDataRay[row].stationCount < 0) ? "-" : QString::number(MainForm::cellDataRay[row].stationCount));
+                setData((MainForm::cellDataRay[row].stationCount < 0) ? QVariant("-") : QVariant(MainForm::cellDataRay[row].stationCount),
+                        Qt::DisplayRole);
         MainForm::cellDataRay[row].pTableItem[STATION_COUNT]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[BW]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].BW);
+                setData(MainForm::cellDataRay[row].BW, Qt::DisplayRole);
         MainForm::cellDataRay[row].pTableItem[BW]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[MINSIGNAL]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].minSignal);
+                setData(MainForm::cellDataRay[row].minSignal, Qt::DisplayRole);
         MainForm::cellDataRay[row].pTableItem[MINSIGNAL]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[MAXSIGNAL]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].maxSignal);
+                setData(MainForm::cellDataRay[row].maxSignal, Qt::DisplayRole);
         MainForm::cellDataRay[row].pTableItem[MAXSIGNAL]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[CENCHAN]->
-                setData(Qt::DisplayRole, MainForm::cellDataRay[row].cenChan);
+                setData(MainForm::cellDataRay[row].cenChan, Qt::DisplayRole);
         MainForm::cellDataRay[row].pTableItem[CENCHAN]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[FIRST_SEEN]->
                 setText(QDateTime::fromTime_t(MainForm::cellDataRay[row].firstSeen).toString("MM/dd-hh:mm:ss"));
@@ -674,7 +699,7 @@ void MainForm::fillTable() {
                 setText(MainForm::cellDataRay[row].vendor.c_str());
     }
     setVisibleCols();
-    MainForm::mainFormWidget.mainTableWidget->setSortingEnabled(true);
+    MainForm::mainFormWidget.mainTableView->setSortingEnabled(true);
 }
 
 class MainForm::Chan24ScaleDraw : public QwtScaleDraw {
@@ -866,16 +891,17 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi].pChanSymbol->setSize(10, 10);
     MainForm::cellDataRay[tbi].pCntlChanPlot->setSymbol(MainForm::cellDataRay[tbi].pChanSymbol);
     // attaching plot curve waits 'till know frequency
-    MainForm::mainFormWidget.mainTableWidget->setRowCount(tbi + 1);
+    model_->setRowCount(tbi + 1);
     for (int ix = 0; ix < MAX_TABLE_COLS; ix++) {
-        MainForm::cellDataRay[tbi].pTableItem[ix] = make_unique<QTableWidgetItem>(); // Give it a table item for each column
-        MainForm::mainFormWidget.mainTableWidget->setItem(tbi, ix,
+        MainForm::cellDataRay[tbi].pTableItem[ix] = make_unique<QStandardItem>(); // Give it a table item for each column
+        model_->setItem(tbi, ix,
                 MainForm::cellDataRay[tbi].pTableItem[ix].get()); // Give it a spot in the table
     }
     MainForm::cellDataRay[tbi].pTableItem[PLOT]->setFlags(
-            Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable);
+            Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemNeverHasChildren);
     MainForm::cellDataRay[tbi].pTableItem[PLOT]->setCheckState(Qt::Checked);
-    MainForm::cellDataRay[tbi].pTableItem[SSID]->setTextColor(MainForm::cellDataRay[tbi].color);
+    MainForm::cellDataRay[tbi].pTableItem[PLOT]->setText("");
+    MainForm::cellDataRay[tbi].pTableItem[SSID]->setForeground(QBrush(MainForm::cellDataRay[tbi].color));
 }
 
 void MainForm::extractData(string tl, int &tbi, int &newBSS) {
@@ -1043,7 +1069,7 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
         MainForm::cellDataRay[ix].timesSeen = 0;
     }
     // disable column sorting to prevent segfaults while we muck with the table
-    MainForm::mainFormWidget.mainTableWidget->setSortingEnabled(false);
+    MainForm::mainFormWidget.mainTableView->setSortingEnabled(false);
     string tempLine;
     bool lastLine = false;
     int block;
