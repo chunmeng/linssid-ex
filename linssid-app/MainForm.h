@@ -30,6 +30,7 @@ class PrefsHandler;
 class prefsDialog;
 class ViewFilterDialog;
 
+class QStandardItem;
 class QStandardItemModel;
 class DataProxyModel;
 
@@ -89,7 +90,7 @@ public slots:
     void doRun();
     void doPlotAll();
     void doPlotNone();
-    void doTableChanged(int,int);
+    void doTableClicked(const QModelIndex &);
     void reDrawTable();
     void showAboutBox();
     void showPrefsDlg();

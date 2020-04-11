@@ -160,8 +160,8 @@ MainForm::MainForm() {
     proxyModel_->setSourceModel(model_.get());
     MainForm::mainFormWidget.mainTableView->setModel(proxyModel_.get());
 
-    // @FIXME: How to connect standard item change?
-    // connect(model_, SIGNAL(itemChanged(int,int)), this, SLOT(doTableChanged(int,int)));
+    // https://stackoverflow.com/questions/19442050/qtableview-how-can-i-get-the-data-when-user-click-on-a-particular-cell-using-mo
+    connect(MainForm::mainFormWidget.mainTableView, SIGNAL(clicked(const QModelIndex &)), this, SLOT(doTableClicked(const QModelIndex &)));
     connect(MainForm::mainFormWidget.mainTableView->horizontalHeader(),
             SIGNAL(sectionResized(int, int, int)), this, SLOT(columnWidthSave(int, int, int)));
 
@@ -495,9 +495,9 @@ void MainForm::doPlotNone() {
     fillPlots();
 }
 
-void MainForm::doTableChanged(int row, int column) {
-    if (column == PLOT) {
-        Utils::waste(row);
+void MainForm::doTableClicked(const QModelIndex &index) {
+    // std::cout << "User clicked item (" << index.row() << ", " << index.column() << ")" << endl;
+    if (index.column() == PLOT) {
         fillPlots();
     }
 }
