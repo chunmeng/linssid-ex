@@ -8,10 +8,13 @@ This is a copy of the LinSSID (https://sourceforge.net/projects/linssid/) with i
 - Show ESSID as label on plot, align to the marker
 - Filter the BSS list by band
 
-## WIP/Pending Features
+![ScreenShot](/screenshots/latest.png?raw=true "Current Application View")
+
+## Future Features
 - Filter by MAC
 - Filter by SSID
 - Filter by channel
+- Update chart/plots based on filter result
 - Save filter setting to preference
 
 ## Build Requirement
