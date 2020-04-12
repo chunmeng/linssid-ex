@@ -6,7 +6,8 @@ The initial source is based on LinSSID 3.6. (https://sourceforge.net/projects/li
 ## New Features Added
 - New columns for BSS load and station count
 - Status bar with counts of total, hidden and open AP
-- Show ESSID as label on plot, align to the marker
+- Show ESSID as label on channel plot, align to the marker
+- Show ESSID as label on time plot, align to last data point
 - Filter the BSS list by band, plots based on filter result
 
 ![ScreenShot](/screenshots/latest.png?raw=true "Current Application View")
@@ -18,7 +19,6 @@ The initial source is based on LinSSID 3.6. (https://sourceforge.net/projects/li
 - Add user preference/option to allow plotting of filtered row
 - Align the view filter dialog to main form 
 - Save filter setting to preference
-- Rework time graph (add ESSID label)
 - Add column for AP capability 
 
 ## Build Requirement

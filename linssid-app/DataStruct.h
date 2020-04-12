@@ -74,8 +74,7 @@ struct CellData {
     double yPlot[4];
     // see: http://www.qtcentre.org/threads/46316-Draw-a-single-point-into-a-qwt-plot
     std::unique_ptr<QwtPlotMarker> pCntlChanPlot; // to plot control channel marker
-    // @NOTE: pChanSymbol will be given to and owned by pCntlChanPlot. ~QwtPlotMarker free the memory
-    QwtSymbol* pChanSymbol;
+    std::unique_ptr<QwtPlotMarker> pSignalTimeMarker; // to plot marker on signal time graph
     std::unique_ptr<QwtPlotCurve> pTimeCurve;
     std::unique_ptr<QStandardItem> pTableItem[MAX_TABLE_COLS];
     std::unique_ptr<History> pHistory;
