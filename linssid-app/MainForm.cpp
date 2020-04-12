@@ -760,13 +760,9 @@ void MainForm::fillPlots() {
             MainForm::blockSampleTime, 10);
     for (int tbi = 0; tbi <= maxTableIndex; tbi++) {
         // first attach plots plots we couldn't before because of sparse data
+        auto markerSymbol = const_cast<QwtSymbol *>(MainForm::cellDataRay[tbi].pCntlChanPlot->symbol());
         if (shouldBePlot(tbi)) {
-            if (MainForm::cellDataRay[tbi].BW >= 40)
-                MainForm::cellDataRay[tbi].pChanSymbol->setStyle(QwtSymbol::Diamond);
-            else MainForm::cellDataRay[tbi].pChanSymbol->setStyle(QwtSymbol::Triangle);
-
-            MainForm::cellDataRay[tbi].pChanSymbol->setColor(MainForm::cellDataRay[tbi].color);
-            MainForm::cellDataRay[tbi].pChanSymbol->setSize(10, 10);
+            markerSymbol->setStyle(MainForm::cellDataRay[tbi].BW >= 40 ? QwtSymbol::Diamond : QwtSymbol::Triangle);
 
             if (this->plotShowLabel) {
                 QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi].essid);
@@ -793,7 +789,7 @@ void MainForm::fillPlots() {
                 MainForm::cellDataRay[tbi].firstPlot = false;
             }
         } else {
-            MainForm::cellDataRay[tbi].pChanSymbol->setStyle(QwtSymbol::NoSymbol);
+            markerSymbol->setStyle(QwtSymbol::NoSymbol);
             MainForm::cellDataRay[tbi].pCntlChanPlot->setLabel(QwtText(""));
         }
         
@@ -907,11 +903,11 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi].pBandCurve->setPen(QPen(MainForm::cellDataRay[tbi].color, 3.0));
     MainForm::cellDataRay[tbi].pBandCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
     MainForm::cellDataRay[tbi].pCntlChanPlot = make_unique<QwtPlotMarker>(); // create plot for control channel symbol
-    MainForm::cellDataRay[tbi].pChanSymbol = new QwtSymbol();
-    MainForm::cellDataRay[tbi].pChanSymbol->setStyle(QwtSymbol::Diamond);
-    MainForm::cellDataRay[tbi].pChanSymbol->setColor(tempColor);
-    MainForm::cellDataRay[tbi].pChanSymbol->setSize(10, 10);
-    MainForm::cellDataRay[tbi].pCntlChanPlot->setSymbol(MainForm::cellDataRay[tbi].pChanSymbol);
+    // @NOTE: symbol is owned and freed by QwtPlotMarker
+    auto markerSymbol = new QwtSymbol(QwtSymbol::Diamond);
+    markerSymbol->setColor(tempColor);
+    markerSymbol->setSize(10, 10);
+    MainForm::cellDataRay[tbi].pCntlChanPlot->setSymbol(markerSymbol);
     MainForm::cellDataRay[tbi].pSignalTimeMarker = make_unique<QwtPlotMarker>();
     // attaching plot curve waits 'till know frequency
     model_->setRowCount(tbi + 1);
