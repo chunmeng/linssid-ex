@@ -789,6 +789,7 @@ void MainForm::fillPlots() {
                     MainForm::cellDataRay[tbi].pBandCurve->attach(MainForm::mainFormWidget.chan5Plot);
                     MainForm::cellDataRay[tbi].pCntlChanPlot->attach(MainForm::mainFormWidget.chan5Plot);
                 }
+                MainForm::cellDataRay[tbi].pSignalTimeMarker->attach(MainForm::mainFormWidget.timePlot);
                 MainForm::cellDataRay[tbi].firstPlot = false;
             }
         } else {
@@ -810,11 +811,12 @@ void MainForm::fillPlots() {
                     MainForm::cellDataRay[tbi].yPlot, 4);
                 // here we plot a point for the control channel
                 MainForm::cellDataRay[tbi].pCntlChanPlot->setValue( 
-                    QPointF( (float) MainForm::cellDataRay[tbi].channel, 
+                    QPointF((float) MainForm::cellDataRay[tbi].channel, 
                     MainForm::cellDataRay[tbi].signal));
         } else {
             MainForm::cellDataRay[tbi].pBandCurve->setSamples(0, 0, 0);
         }
+
         // now the signal history plot
         int ixStart;
         int ixLength;
@@ -830,9 +832,21 @@ void MainForm::fillPlots() {
             MainForm::cellDataRay[tbi].pTimeCurve->setRawSamples(
                     &(MainForm::cellDataRay[tbi].pHistory->sampleSec[ixStart]),
                     &(MainForm::cellDataRay[tbi].pHistory->signal[ixStart]), ixLength);
+            // Place the marker where the latest data point show up
+            MainForm::cellDataRay[tbi].pSignalTimeMarker->setValue( 
+                QPointF((float)MainForm::cellDataRay[tbi].pHistory->sampleSec[ixStart+ixLength-1],
+                MainForm::cellDataRay[tbi].signal));
+            if (this->plotShowLabel) {
+                QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi].essid);
+                markerLabel.setColor(MainForm::cellDataRay[tbi].color);
+                MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabelAlignment(Qt::AlignLeft | Qt::AlignTop);
+                MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabel(markerLabel);
+            } else {
+                MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabel(QwtText(""));
+            }
         } else {
-
             MainForm::cellDataRay[tbi].pTimeCurve->setSamples(0, 0, 0);
+            MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabel(QwtText(""));
         }
     }
     MainForm::mainFormWidget.chan24Plot->replot();
@@ -898,6 +912,7 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi].pChanSymbol->setColor(tempColor);
     MainForm::cellDataRay[tbi].pChanSymbol->setSize(10, 10);
     MainForm::cellDataRay[tbi].pCntlChanPlot->setSymbol(MainForm::cellDataRay[tbi].pChanSymbol);
+    MainForm::cellDataRay[tbi].pSignalTimeMarker = make_unique<QwtPlotMarker>();
     // attaching plot curve waits 'till know frequency
     model_->setRowCount(tbi + 1);
     for (int ix = 0; ix < MAX_TABLE_COLS; ix++) {
