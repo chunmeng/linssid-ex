@@ -527,12 +527,17 @@ void MainForm::showPrefsDlg() {
     prefsDlg.reset();
 }
 
-void MainForm::showViewFilterDlg() {
-    // Make a modeless dialog
-    if (viewFilterDlg_ == nullptr) {// already a prefs dialog open somewhere...
-        viewFilterDlg_ = make_unique<ViewFilterDialog>((QObject*)this->proxyModel_.get());
+void MainForm::showViewFilterDlg()
+{
+    if (viewFilterDlg_ == nullptr) {
+        viewFilterDlg_ = make_unique<ViewFilterDialog>(this, (QObject*)this->proxyModel_.get());
     }
-
+    // Trying to make modeless dialog that stay on top, only when main window is focused
+    // https://stackoverflow.com/questions/32216498/modeless-qt-window-on-top-of-parent-but-not-on-top-of-other-applications
+    // @FIXME: Currently not perfect with this problem
+    //   1) The diaglog always on top, even when main window is hidden
+    auto flags = viewFilterDlg_->windowFlags();
+    viewFilterDlg_->setWindowFlags(flags | Qt::WindowStaysOnTopHint | Qt::Tool);
     viewFilterDlg_->show();
     viewFilterDlg_->raise();
     viewFilterDlg_->activateWindow();

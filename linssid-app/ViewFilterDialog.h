@@ -11,7 +11,7 @@
 class ViewFilterDialog : public QDialog {
     Q_OBJECT
 public:
-    ViewFilterDialog(QObject* parent);
+    ViewFilterDialog(QWidget *parent, QObject* filterProxy);
     virtual ~ViewFilterDialog();
 
 public slots:

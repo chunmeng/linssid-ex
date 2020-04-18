@@ -7,7 +7,8 @@
 
 using namespace std;
 
-ViewFilterDialog::ViewFilterDialog(QObject *filterProxy)
+ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
+    : QDialog(parent)
 {
     widget.setupUi(this);
     connect(widget.checkBox5G, SIGNAL(stateChanged(int)), this, SLOT(bandChanged(int)));
