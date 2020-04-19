@@ -8,7 +8,7 @@
 
 #include "ui_ViewFilterDialog.h"
 
-class ViewFilterDialog : public QDialog {
+class ViewFilterDialog : public QWidget {
     Q_OBJECT
 public:
     ViewFilterDialog(QWidget *parent, QObject* filterProxy);

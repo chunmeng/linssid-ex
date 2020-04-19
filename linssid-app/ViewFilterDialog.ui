@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ViewFilterDialog</class>
- <widget class="QDialog" name="ViewFilterDialog">
+ <widget class="QWidget" name="ViewFilterDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
