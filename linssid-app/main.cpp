@@ -20,6 +20,7 @@
 #include "ui_MainForm.h"
 #include "Getter.h"
 #include "Custom.h"
+#include "Logger.h"
 
 using namespace std;
 
@@ -37,7 +38,7 @@ int realUID;
 struct passwd *realUser;
 string fullPrefsName;
 string fullLogName;
-
+Logger AppLogger("App");
 
 int main(int argc, char *argv[]) {
     // initialize resources, if needed
@@ -62,9 +63,16 @@ It will not work. Try linssid-pkexec instead. Sorry. Goodbye.");
         realUID = 0;
     }
     realUser = getpwuid(realUID);
+    // @TODO: Pass by argument
     fullPrefsName = string(realUser->pw_dir) + "/" + string(PREFS_FILE_NAME);
     fullLogName = string(realUser->pw_dir) + "/" + string(LOG_DATA_FILE_NAME);
     
+    AppLogger.setLevel(LogLevel::Debug);
+    QStringList args = app.arguments();
+    InfoLog(AppLogger) << "Start with " << args.count() << " args:";
+    for (int i = 0; i < args.count(); ++i)
+        InfoLog(AppLogger) << "  > " << args.at(i).toStdString();
+
     //  create instances of the main GUI and the worker thread and initialize
     Getter getter1; // instance of Getter
     MainForm form1; // instance of MainForm
