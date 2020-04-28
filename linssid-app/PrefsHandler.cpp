@@ -1,14 +1,16 @@
 #include "PrefsHandler.h"
+#include "Logger.h"
 #include "Utils.h"
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pwd.h>
 
 using namespace std;
+
+extern Logger AppLogger;
 
 // @TODO: Should do something about these extern...
 extern struct passwd *realUser;
@@ -56,7 +58,7 @@ void PrefsHandler::save(const sDefPref& prefData)
     // Writes a block of preferences of the structure sDefPref struct.
     // At entry, the file must either not exist or be closed.
     // At exit, the newly written file will be closed.
-    std::cout << "Writing preference to " << filePath_ << endl;
+    InfoLog(AppLogger) << "Writing preference to " << filePath_ << endl;
     ofstream prefs;
     prefs.open(filePath_, ios::out);
     Utils::waste(chown(filePath_.c_str(), realUser->pw_uid, realUser->pw_gid));
@@ -101,7 +103,7 @@ PrefsHandler::sDefPref PrefsHandler::load()
     fstream prefs;
     prefs.open(filePath_, ios::in);
     if (!prefs.is_open()) { // no prefs file, so return default
-        std::cout << "Load default preference" << endl;
+        InfoLog(AppLogger) << "Load default preference" << endl;
         prefData = defPref;
         return prefData;
     }
@@ -119,12 +121,12 @@ PrefsHandler::sDefPref PrefsHandler::load()
     }
     if (prefData.version != LINSSIDPREFSVER) { // old version so trash and replace with defaults
         prefs.close();
-        std::cout << "Could not parse ver: " << prefData.version << ". Load default preference" << endl;
+        ErrorLog(AppLogger) << "Could not parse ver: " << prefData.version << ". Load default preference" << endl;
         prefData = defPref;
         return prefData;
     }
     // Proceed to parse prefs
-    std::cout << "Load preference from " << filePath_ << endl;
+    InfoLog(AppLogger) << "Load preference from " << filePath_ << endl;
     prefs.seekg(0);
     prefs.clear();
     while (getline(prefs, line)) {

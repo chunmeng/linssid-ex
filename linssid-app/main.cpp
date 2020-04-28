@@ -7,6 +7,7 @@
 
 #include <QtWidgets/QApplication>
 #include <QMessageBox>
+#include <QCommandLineParser>
 #include <pwd.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -20,6 +21,7 @@
 #include "ui_MainForm.h"
 #include "Getter.h"
 #include "Custom.h"
+#include "Logger.h"
 
 using namespace std;
 
@@ -37,7 +39,7 @@ int realUID;
 struct passwd *realUser;
 string fullPrefsName;
 string fullLogName;
-
+Logger AppLogger("App");
 
 int main(int argc, char *argv[]) {
     // initialize resources, if needed
@@ -45,15 +47,33 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
 
-// make sure we're running as root, otherwise bag it.
+    // make sure we're running as root, otherwise bag it.
     if (geteuid() != 0) {
-      QMessageBox messageBox;
-      messageBox.critical(0,"Error",
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error",
         "You are attempting to run LinSSID without root privilege.\n\
 It will not work. Try linssid-pkexec instead. Sorry. Goodbye.");
-      messageBox.setFixedSize(500,200);
-      exit(1);
+        messageBox.setFixedSize(500,200);
+        exit(1);
     }
+
+    QCommandLineParser parser;
+    parser.addHelpOption();
+    parser.addOptions({
+        {{"d", "debug"},
+            QCoreApplication::translate("main", "Set debug logging level in {None, Error, Warn, Info, Debug, Verbose}.\nDefault: Error"),
+            QCoreApplication::translate("main", "LEVEL")},
+    });
+    parser.process(app);
+    LogLevel level = LogLevel::Error;
+    QString lvlString = parser.value("debug");
+    level = Logger::ToLogLevel(lvlString.toStdString());
+    AppLogger.setLevel(level);
+    QStringList args = app.arguments();
+    VerboseLog(AppLogger) << "Start with " << args.count() << " args:";
+    for (int i = 0; i < args.count(); ++i)
+        VerboseLog(AppLogger) << "  > " << args.at(i).toStdString();
+
     // Find the real user if launched from pkexec
     // If launched with sudo, then real UID is 0
     if (getenv("PKEXEC_UID") != nullptr) {
@@ -62,9 +82,10 @@ It will not work. Try linssid-pkexec instead. Sorry. Goodbye.");
         realUID = 0;
     }
     realUser = getpwuid(realUID);
+    // @TODO: Pass by argument
     fullPrefsName = string(realUser->pw_dir) + "/" + string(PREFS_FILE_NAME);
     fullLogName = string(realUser->pw_dir) + "/" + string(LOG_DATA_FILE_NAME);
-    
+
     //  create instances of the main GUI and the worker thread and initialize
     Getter getter1; // instance of Getter
     MainForm form1; // instance of MainForm

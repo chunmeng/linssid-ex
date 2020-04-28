@@ -1,11 +1,13 @@
 
 #include "VendorDb.h"
 #include "Custom.h"
+#include "Logger.h"
 #include <fstream>
-#include <iostream>
 #include <vector>
 
 using namespace std;
+
+extern Logger AppLogger;
 
 class VendorDb::Impl {
 public:
@@ -40,8 +42,7 @@ void VendorDb::Impl::loadVendorDb()
     ifstream vendorFile;
     vendorFile.open(VENDOR_FILE_NAME, ios::in);
     if (!vendorFile.is_open()) {
-        // @TODO: Move this to a debug logging class
-        std::cout << "Error opening " << VENDOR_FILE_NAME << endl;
+        ErrorLog(AppLogger) << "Error opening " << VENDOR_FILE_NAME << endl;
         return;
     }
     int numVendorsSink;
@@ -54,7 +55,7 @@ void VendorDb::Impl::loadVendorDb()
         vendor.push_back({strtoul(tempString.substr(0,9).c_str(), nullptr, 16), tempString[9], tempString.substr(10)});
     }
     vendorFile.close();
-    std::cout << "Loaded " << vendor.size() << " vendor entries" << endl;
+    InfoLog(AppLogger) << "Loaded " << vendor.size() << " vendor entries" << endl;
 }
 
 std::string VendorDb::Impl::lookup(const string& mac)
