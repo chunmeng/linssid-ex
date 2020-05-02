@@ -6,15 +6,16 @@ using namespace std;
 
 DataProxyModel::DataProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
-    , showBand5G_(true)
-    , showBand24G_(true)
 {
+    // Initialize to default filter condition
+    state_.byBand = true;
+    state_.showBand5G = true;
+    state_.showBand24G = true;
 }
 
-void DataProxyModel::setBand(bool show5G, bool show24G)
+void DataProxyModel::setFilter(const FilterState& state)
 {
-    showBand5G_ = show5G;
-    showBand24G_ = show24G;
+    state_ = state; // copy whole
     invalidateFilter();
 }
 
@@ -24,8 +25,10 @@ bool DataProxyModel::filterAcceptsRow(int sourceRow,
 {
     QModelIndex channelIndex = sourceModel()->index(sourceRow, CHANNEL, sourceParent);
     int channel = sourceModel()->data(channelIndex).toInt();
-    if (channel <= 14 && !showBand24G_) return false;
-    if (channel > 14 && !showBand5G_) return false;
+    if (state_.byBand) {
+        if (channel <= 14 && !state_.showBand24G) return false;
+        if (channel > 14 && !state_.showBand5G) return false;
+    }
     return true;
 }
 

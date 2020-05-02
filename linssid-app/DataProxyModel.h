@@ -3,6 +3,12 @@
 
 #include <QSortFilterProxyModel>
 
+struct FilterState {
+    bool byBand;
+    bool showBand5G;
+    bool showBand24G;
+};
+
 class DataProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
@@ -15,11 +21,10 @@ public:
     bool isFiltered(int sourceRow) const;
 
 public slots:
-    void setBand(bool show5G, bool show24G);
+    void setFilter(const FilterState& state);
 
 private:
-    bool showBand5G_;
-    bool showBand24G_;
+    FilterState state_;
 };
 
 #endif // _DATAPROXYMODEL_H
