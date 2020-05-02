@@ -17,6 +17,7 @@ ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
     connect(widget.groupBoxBand, SIGNAL(toggled(bool)), this, SLOT(bandGroupChanged(bool)));
     connect(widget.checkBox5G, SIGNAL(stateChanged(int)), this, SLOT(bandChanged(int)));
     connect(widget.checkBox24G, SIGNAL(stateChanged(int)), this, SLOT(bandChanged(int)));
+    connect(widget.checkBoxChannel, SIGNAL(stateChanged(int)), this, SLOT(channelChanged(int)));
     // connect to filter model
     connect(this, SIGNAL(filterUpdated(FilterState)), filterProxy, SLOT(setFilter(FilterState)));
 }
@@ -28,6 +29,8 @@ void ViewFilterDialog::initUiStates(const FilterState& opt)
     widget.groupBoxBand->setChecked(opt.byBand);
     widget.checkBox5G->setChecked(opt.showBand5G);
     widget.checkBox24G->setChecked(opt.showBand24G);
+    widget.checkBoxChannel->setChecked(opt.byChannel);
+    widget.lineEditChannel->setEnabled(opt.byChannel);
 }
 
 void ViewFilterDialog::bandGroupChanged(bool dontCare)
@@ -43,5 +46,17 @@ void ViewFilterDialog::bandChanged(int dontCare)
     (void)dontCare;
     options_.showBand5G = widget.checkBox5G->isChecked();
     options_.showBand24G = widget.checkBox24G->isChecked();
+    emit filterUpdated(options_);
+}
+
+void ViewFilterDialog::channelChanged(int state)
+{
+    if (state == Qt::CheckState::Checked) {
+        options_.byChannel = true;
+        widget.lineEditChannel->setEnabled(true);
+    } else {
+        options_.byChannel = false;
+        widget.lineEditChannel->setEnabled(false);
+    }
     emit filterUpdated(options_);
 }

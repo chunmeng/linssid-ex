@@ -2,11 +2,14 @@
 #define _DATAPROXYMODEL_H
 
 #include <QSortFilterProxyModel>
+#include <string>
 
 struct FilterState {
     bool byBand = true;
     bool showBand5G = true;
     bool showBand24G = true;
+    bool byChannel = false;
+    std::string channels = "-";
 };
 
 class DataProxyModel : public QSortFilterProxyModel

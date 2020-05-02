@@ -18,6 +18,7 @@ public:
 public slots:
     void bandGroupChanged(bool);
     void bandChanged(int);
+    void channelChanged(int);
 
 signals:
     void filterUpdated(const FilterState& opt);
