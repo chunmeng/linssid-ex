@@ -11,6 +11,8 @@ ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
     : QWidget(parent)
 {
     widget.setupUi(this);
+    // Initialize to default filter condition
+    initUiStates(options_);
     // connect all signals and slots locally
     connect(widget.groupBoxBand, SIGNAL(toggled(bool)), this, SLOT(bandGroupChanged(bool)));
     connect(widget.checkBox5G, SIGNAL(stateChanged(int)), this, SLOT(bandChanged(int)));
@@ -20,6 +22,13 @@ ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
 }
 
 ViewFilterDialog::~ViewFilterDialog() = default;
+
+void ViewFilterDialog::initUiStates(const FilterState& opt)
+{
+    widget.groupBoxBand->setChecked(opt.byBand);
+    widget.checkBox5G->setChecked(opt.showBand5G);
+    widget.checkBox24G->setChecked(opt.showBand24G);
+}
 
 void ViewFilterDialog::bandGroupChanged(bool dontCare)
 {

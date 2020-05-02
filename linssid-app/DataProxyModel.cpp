@@ -7,10 +7,6 @@ using namespace std;
 DataProxyModel::DataProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
 {
-    // Initialize to default filter condition
-    state_.byBand = true;
-    state_.showBand5G = true;
-    state_.showBand24G = true;
 }
 
 void DataProxyModel::setFilter(const FilterState& state)

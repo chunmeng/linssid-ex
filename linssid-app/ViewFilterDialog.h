@@ -23,6 +23,9 @@ signals:
     void filterUpdated(const FilterState& opt);
 
 private:
+    void initUiStates(const FilterState& opt);
+
+private:
     Ui::ViewFilterDialog widget;
     FilterState options_;
 };

@@ -4,9 +4,9 @@
 #include <QSortFilterProxyModel>
 
 struct FilterState {
-    bool byBand;
-    bool showBand5G;
-    bool showBand24G;
+    bool byBand = true;
+    bool showBand5G = true;
+    bool showBand24G = true;
 };
 
 class DataProxyModel : public QSortFilterProxyModel
