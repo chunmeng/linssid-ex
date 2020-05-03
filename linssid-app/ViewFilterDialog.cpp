@@ -4,8 +4,10 @@
  */
 
 #include "ViewFilterDialog.h"
+#include "Logger.h"
 
 using namespace std;
+extern Logger AppLogger;
 
 ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
     : QWidget(parent)
@@ -18,6 +20,8 @@ ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
     connect(widget.checkBox5G, SIGNAL(stateChanged(int)), this, SLOT(bandChanged(int)));
     connect(widget.checkBox24G, SIGNAL(stateChanged(int)), this, SLOT(bandChanged(int)));
     connect(widget.checkBoxChannel, SIGNAL(stateChanged(int)), this, SLOT(channelChanged(int)));
+    // lineEditChannel returnPressed() and editingFinished()
+    connect(widget.lineEditChannel, SIGNAL(editingFinished()), this, SLOT(channelTextChanged()));
     // connect to filter model
     connect(this, SIGNAL(filterUpdated(FilterState)), filterProxy, SLOT(setFilter(FilterState)));
 }
@@ -31,6 +35,12 @@ void ViewFilterDialog::initUiStates(const FilterState& opt)
     widget.checkBox24G->setChecked(opt.showBand24G);
     widget.checkBoxChannel->setChecked(opt.byChannel);
     widget.lineEditChannel->setEnabled(opt.byChannel);
+    widget.lineEditChannel->setText(QString::fromStdString(opt.channels));
+    // @FIXME: Does not behave the same as regex101 and still accept 6d number. Maybe this is over engineering, and a simple [0-9,-] would do... 
+    // https://regex101.com/r/KwvbjH/3
+    // v4 - ^([0-9]{1,3})([,-]+[0-9]{1,3})*([0-9]{1,3}[,])?$
+    // v3 - ^([0-9]{1,3}){1}([,-]+[0-9]{1,3})*([0-9]{1,3}[,])?$
+    widget.lineEditChannel->setValidator(new QRegExpValidator(QRegExp("^([0-9]{1,3})([,-]+[0-9]{1,3})*([0-9]{1,3}[,])?$"), widget.lineEditChannel));
 }
 
 void ViewFilterDialog::bandGroupChanged(bool dontCare)
@@ -58,5 +68,14 @@ void ViewFilterDialog::channelChanged(int state)
         options_.byChannel = false;
         widget.lineEditChannel->setEnabled(false);
     }
+    emit filterUpdated(options_);
+}
+
+void ViewFilterDialog::channelTextChanged()
+{
+    DebugLog(AppLogger) << "Channels entered: " << widget.lineEditChannel->text().toStdString();
+    if (options_.channels == widget.lineEditChannel->text().toStdString())
+        return;
+    options_.channels = widget.lineEditChannel->text().toStdString();
     emit filterUpdated(options_);
 }
