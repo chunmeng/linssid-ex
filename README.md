@@ -9,17 +9,18 @@ The initial source is based on LinSSID 3.6. (https://sourceforge.net/projects/li
 - Show ESSID as label on channel plot, align to the marker
 - Show ESSID as label on time plot, align to last data point
 - Filter the BSS list by band, plots based on filter result
+- Filter by channel
 
 ![ScreenShot](/screenshots/latest.png?raw=true "Current Application View")
 
 ## TODO
 - Add filter by MAC
 - Add filter by SSID
-- Add filter by channel
 - Add user preference/option to allow plotting of filtered row
 - Align the view filter dialog to main form 
 - Save filter setting to preference
-- Add column for AP capability 
+- Add column for AP capability
+- Look into channel filter string regex to prevent entries like (1-1-1,111111)
 
 ## Build Requirement
 

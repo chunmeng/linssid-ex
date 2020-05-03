@@ -37,6 +37,12 @@
      <height>71</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Filter by band</string>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
    <property name="title">
     <string>Band</string>
    </property>
@@ -44,7 +50,7 @@
     <bool>false</bool>
    </property>
    <property name="checkable">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <widget class="QCheckBox" name="checkBox5G">
     <property name="geometry">
@@ -65,7 +71,7 @@
    <widget class="QCheckBox" name="checkBox24G">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>140</x>
       <y>30</y>
       <width>92</width>
       <height>23</height>
@@ -81,7 +87,7 @@
   </widget>
   <widget class="QCheckBox" name="checkBoxChannel">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
@@ -90,6 +96,9 @@
      <width>92</width>
      <height>23</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>Filter by channel</string>
    </property>
    <property name="text">
     <string>Channel</string>
@@ -107,8 +116,11 @@
      <height>25</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Input format: 1,36-48,151 </string>
+   </property>
    <property name="text">
-    <string>*</string>
+    <string>-</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

@@ -1,20 +1,113 @@
 #include "DataProxyModel.h"
 #include "Custom.h"
+#include "Logger.h"
+#include "Utils.h"
 #include <iostream>
+#include <regex>
+#include <stdexcept>
+#include <tuple>
+#include <vector>
 
 using namespace std;
+extern Logger AppLogger;
+
+namespace {
+
+std::tuple<bool, std::pair<int, int>> toBucket(const string& s1, const string& s2)
+{
+    try {
+        int lowBound = std::stoi(s1);
+        int highBound = std::stoi(s2);
+        if (lowBound > highBound) {
+            std::swap(lowBound, highBound);
+        }
+        return make_tuple(true, make_pair(lowBound, highBound));
+    } catch (const exception& e) {
+        // consume quitely
+    }
+    return make_tuple(false, make_pair(0, 0));
+}
+
+};
+
+class DataProxyModel::Impl {
+public:
+    Impl() {
+        channelBuckets.reserve(20);
+        updateChannelBuckets(state.channels);
+    };
+
+public:
+    void updateChannelBuckets(const string& channels);
+    bool isChannelInBuckets(int channel) const;
+    bool acceptChannel(int channel) const;
+
+public:
+    FilterState state;
+    vector<pair<int, int>> channelBuckets;
+};
+
+void DataProxyModel::Impl::updateChannelBuckets(const string& channels)
+{
+    // Format: m,n,m-n
+    channelBuckets.clear();
+    std::regex rangeRe("(\\d+)-(\\d+)");
+    std::smatch match;
+    auto tokens = Utils::split(channels, ',');
+    for (auto& t : tokens) {
+        tuple<bool, pair<int, int>> bucket;
+        if (std::regex_match(t, match, rangeRe)) { // check if range
+            // The first sub_match is the whole string; the next sub_match is the first parenthesized expression.
+            if (match.size() == 3) {
+                bucket = toBucket(match[1], match[2]);
+            }
+        } else if (!t.empty()) {
+            bucket = toBucket(t, t);
+        }
+        if (std::get<0>(bucket)) {
+            VerboseLog(AppLogger) << "Add bucket: " << t << " -> [" << std::get<1>(bucket).first << ", " << std::get<1>(bucket).second << "]";
+            channelBuckets.push_back(move(std::get<1>(bucket)));
+        }
+    }
+    // @TODO: Make buckets non-overlap for more efficient search? (Maybe not worth the complexity for a small size buckets...)
+    std::sort(channelBuckets.begin(), channelBuckets.end());
+}
+
+bool DataProxyModel::Impl::isChannelInBuckets(int channel) const
+{
+    for (auto& p : channelBuckets) {
+        // The buckets is sorted, so if less than low bound, then skip the rest
+        if (channel < p.first) return false;
+        if (channel >= p.first && channel <= p.second) return true; // Found the bucket with the channel, done
+    }
+    return false;
+}
+
+bool DataProxyModel::Impl::acceptChannel(int channel) const
+{
+    if (state.byBand) {
+        if (channel <= 14 && !state.showBand24G) return false;
+        if (channel > 14 && !state.showBand5G) return false;
+    }
+    if (state.byChannel) {
+        if (!isChannelInBuckets(channel)) return false;
+    }
+    return true;
+}
 
 DataProxyModel::DataProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
-    , showBand5G_(true)
-    , showBand24G_(true)
+    , impl_(new Impl())
 {
 }
 
-void DataProxyModel::setBand(bool show5G, bool show24G)
+DataProxyModel::~DataProxyModel() = default;
+
+void DataProxyModel::setFilter(const FilterState& state)
 {
-    showBand5G_ = show5G;
-    showBand24G_ = show24G;
+    if (impl_->state.channels != state.channels)
+        impl_->updateChannelBuckets(state.channels);
+    impl_->state = state; // copy whole
     invalidateFilter();
 }
 
@@ -24,8 +117,8 @@ bool DataProxyModel::filterAcceptsRow(int sourceRow,
 {
     QModelIndex channelIndex = sourceModel()->index(sourceRow, CHANNEL, sourceParent);
     int channel = sourceModel()->data(channelIndex).toInt();
-    if (channel <= 14 && !showBand24G_) return false;
-    if (channel > 14 && !showBand5G_) return false;
+    if (!impl_->acceptChannel(channel)) return false;
+    // @TODO: Filter by mac, ssid, etc
     return true;
 }
 

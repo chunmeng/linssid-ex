@@ -1,6 +1,6 @@
 #include "Utils.h"
-#include <sstream>
 #include <climits>
+#include <sstream>
 
 using namespace std;
 
@@ -30,6 +30,16 @@ int Utils::MinIntStr(const string &s)
         if (tempInt < retInt) retInt = tempInt;
     }
     return retInt;
+}
+
+vector<string> Utils::split(const string &s, char delim) {
+    stringstream ss(s);
+    string item;
+    vector<string> elems;
+    while (getline(ss, item, delim)) {
+        elems.push_back(move(item)); // C++11
+    }
+    return elems;
 }
 
 // string trimming

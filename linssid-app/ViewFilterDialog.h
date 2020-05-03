@@ -7,6 +7,7 @@
 #define	_VIEWFILTERDIALOG_H
 
 #include "ui_ViewFilterDialog.h"
+#include "DataProxyModel.h"
 
 class ViewFilterDialog : public QWidget {
     Q_OBJECT
@@ -15,12 +16,20 @@ public:
     virtual ~ViewFilterDialog();
 
 public slots:
+    void bandGroupChanged(bool);
     void bandChanged(int);
+    void channelChanged(int);
+    void channelTextChanged();
 
 signals:
-    void bandChanged(bool, bool);
+    void filterUpdated(const FilterState& opt);
+
+private:
+    void initUiStates(const FilterState& opt);
+
 private:
     Ui::ViewFilterDialog widget;
+    FilterState options_;
 };
 
 #endif	/* _VIEWFILTERDIALOG_H */
