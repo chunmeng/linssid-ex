@@ -73,9 +73,9 @@ void ViewFilterDialog::channelChanged(int state)
 
 void ViewFilterDialog::channelTextChanged()
 {
-    DebugLog(AppLogger) << "Channels entered: " << widget.lineEditChannel->text().toStdString();
     if (options_.channels == widget.lineEditChannel->text().toStdString())
         return;
+    DebugLog(AppLogger) << "Filter channels changed: " << widget.lineEditChannel->text().toStdString();
     options_.channels = widget.lineEditChannel->text().toStdString();
     emit filterUpdated(options_);
 }
