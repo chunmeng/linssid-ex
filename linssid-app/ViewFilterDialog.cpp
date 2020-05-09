@@ -20,8 +20,10 @@ ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
     connect(widget.checkBox5G, SIGNAL(stateChanged(int)), this, SLOT(bandChanged(int)));
     connect(widget.checkBox24G, SIGNAL(stateChanged(int)), this, SLOT(bandChanged(int)));
     connect(widget.checkBoxChannel, SIGNAL(stateChanged(int)), this, SLOT(channelChanged(int)));
+    connect(widget.checkBoxSSID, SIGNAL(stateChanged(int)), this, SLOT(ssidChanged(int)));
     // lineEditChannel returnPressed() and editingFinished()
     connect(widget.lineEditChannel, SIGNAL(editingFinished()), this, SLOT(channelTextChanged()));
+    connect(widget.lineEditSSID, SIGNAL(editingFinished()), this, SLOT(ssidTextChanged()));
     // connect to filter model
     connect(this, SIGNAL(filterUpdated(FilterState)), filterProxy, SLOT(setFilter(FilterState)));
 }
@@ -72,11 +74,32 @@ void ViewFilterDialog::channelChanged(int state)
     emit filterUpdated(options_);
 }
 
+void ViewFilterDialog::ssidChanged(int state)
+{
+    if (state == Qt::CheckState::Checked) {
+        options_.bySsid = true;
+        widget.lineEditSSID->setEnabled(true);
+    } else {
+        options_.bySsid = false;
+        widget.lineEditSSID->setEnabled(false);
+    }
+    emit filterUpdated(options_);
+}
+
 void ViewFilterDialog::channelTextChanged()
 {
     if (options_.channels == widget.lineEditChannel->text().toStdString())
         return;
     DebugLog(AppLogger) << "Filter channels changed: " << widget.lineEditChannel->text().toStdString();
     options_.channels = widget.lineEditChannel->text().toStdString();
+    emit filterUpdated(options_);
+}
+
+void ViewFilterDialog::ssidTextChanged()
+{
+    if (options_.ssid == widget.lineEditSSID->text().toStdString())
+        return;
+    DebugLog(AppLogger) << "Filter ssid changed: " << widget.lineEditSSID->text().toStdString();
+    options_.ssid = widget.lineEditSSID->text().toStdString();
     emit filterUpdated(options_);
 }
