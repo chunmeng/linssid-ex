@@ -147,7 +147,7 @@
   </widget>
   <widget class="QCheckBox" name="checkBoxMac">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
@@ -159,19 +159,6 @@
    </property>
    <property name="text">
     <string>MAC</string>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="comboBoxMac">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>170</y>
-     <width>161</width>
-     <height>25</height>
-    </rect>
    </property>
   </widget>
   <widget class="QPushButton" name="buttonSave">
@@ -203,13 +190,41 @@
     </rect>
    </property>
    <property name="toolTip">
-    <string>Show only SSID containing this text, case sensitive. e.g.: oo will show FooBar, BarFoo</string>
+    <string>Match SSID containing the string, case sensitive. e.g.: Oo will show FOoBar</string>
    </property>
    <property name="text">
     <string/>
    </property>
    <property name="maxLength">
     <number>32</number>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditMAC">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>170</y>
+     <width>161</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Match MAC containing the string, case insensitive. ? for wildcard</string>
+   </property>
+   <property name="inputMask">
+    <string/>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="maxLength">
+    <number>17</number>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
