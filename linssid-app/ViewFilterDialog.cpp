@@ -36,6 +36,7 @@ void ViewFilterDialog::initUiStates(const FilterState& opt)
     widget.checkBoxChannel->setChecked(opt.byChannel);
     widget.lineEditChannel->setEnabled(opt.byChannel);
     widget.lineEditChannel->setText(QString::fromStdString(opt.channels));
+    widget.checkBoxSSID->setChecked(opt.bySsid);
     // @FIXME: Does not behave the same as regex101 and still accept 6d number. Maybe this is over engineering, and a simple [0-9,-] would do... 
     // https://regex101.com/r/KwvbjH/3
     // v4 - ^([0-9]{1,3})([,-]+[0-9]{1,3})*([0-9]{1,3}[,])?$

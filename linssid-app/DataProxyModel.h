@@ -5,12 +5,19 @@
 #include <memory>
 #include <string>
 
+// Currently this hold the default value and every instances starts
+// with the same default.
+// @TODO:
+// The application should hold one copy of this instance, load from a config
+// and pass it around
 struct FilterState {
     bool byBand = true;
     bool showBand5G = true;
     bool showBand24G = true;
     bool byChannel = false;
     std::string channels = "1-165";
+    bool bySsid = false;
+    std::string ssid = "";
 };
 
 class DataProxyModel : public QSortFilterProxyModel
