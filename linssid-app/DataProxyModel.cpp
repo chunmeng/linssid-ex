@@ -41,6 +41,7 @@ public:
     void updateChannelBuckets(const string& channels);
     bool isChannelInBuckets(int channel) const;
     bool acceptChannel(int channel) const;
+    bool acceptSsid(const string &ssid) const;
 
 public:
     FilterState state;
@@ -95,6 +96,16 @@ bool DataProxyModel::Impl::acceptChannel(int channel) const
     return true;
 }
 
+bool DataProxyModel::Impl::acceptSsid(const string& ssid) const
+{
+    if (state.bySsid) {
+        if (state.ssid.empty()) return true;    // Accept every ssid
+        if (ssid.find(state.ssid) != std::string::npos) return true; // Found in ssid, accept it
+        return false;
+    }
+    return true;
+}
+
 DataProxyModel::DataProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
     , impl_(new Impl())
@@ -118,7 +129,11 @@ bool DataProxyModel::filterAcceptsRow(int sourceRow,
     QModelIndex channelIndex = sourceModel()->index(sourceRow, CHANNEL, sourceParent);
     int channel = sourceModel()->data(channelIndex).toInt();
     if (!impl_->acceptChannel(channel)) return false;
-    // @TODO: Filter by mac, ssid, etc
+
+    QModelIndex ssidIndex = sourceModel()->index(sourceRow, SSID, sourceParent);
+    auto ssid = sourceModel()->data(ssidIndex).toString();
+    if (!impl_->acceptSsid(ssid.toStdString())) return false;
+    // @TODO: Filter by mac, etc
     return true;
 }
 

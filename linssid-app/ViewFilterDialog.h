@@ -20,6 +20,8 @@ public slots:
     void bandChanged(int);
     void channelChanged(int);
     void channelTextChanged();
+    void ssidChanged(int);
+    void ssidTextChanged();
 
 signals:
     void filterUpdated(const FilterState& opt);

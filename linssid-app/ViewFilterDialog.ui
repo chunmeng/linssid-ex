@@ -91,14 +91,14 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>10</x>
      <y>90</y>
      <width>92</width>
      <height>23</height>
     </rect>
    </property>
    <property name="toolTip">
-    <string>Filter by channel</string>
+    <string>Enable filter by channel</string>
    </property>
    <property name="text">
     <string>Channel</string>
@@ -110,9 +110,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>100</x>
      <y>90</y>
-     <width>131</width>
+     <width>161</width>
      <height>25</height>
     </rect>
    </property>
@@ -128,15 +128,18 @@
   </widget>
   <widget class="QCheckBox" name="checkBoxSSID">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>10</x>
      <y>130</y>
      <width>92</width>
      <height>23</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>Enable filter by SSID/ESSID</string>
    </property>
    <property name="text">
     <string>SSID</string>
@@ -148,7 +151,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>10</x>
      <y>170</y>
      <width>92</width>
      <height>23</height>
@@ -158,28 +161,15 @@
     <string>MAC</string>
    </property>
   </widget>
-  <widget class="QComboBox" name="comboBoxSsid">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>130</y>
-     <width>131</width>
-     <height>25</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QComboBox" name="comboBoxMac">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>100</x>
      <y>170</y>
-     <width>131</width>
+     <width>161</width>
      <height>25</height>
     </rect>
    </property>
@@ -198,6 +188,31 @@
    </property>
    <property name="text">
     <string>Save</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditSSID">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>130</y>
+     <width>161</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Show only SSID containing this text, case sensitive. e.g.: oo will show FooBar, BarFoo</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="maxLength">
+    <number>32</number>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
   </widget>
  </widget>
