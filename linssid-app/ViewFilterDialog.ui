@@ -117,7 +117,7 @@
     </rect>
    </property>
    <property name="toolTip">
-    <string>Input format: 1,36-48,151 </string>
+    <string>Match channels in this list. Input format: 1,36-48,151</string>
    </property>
    <property name="text">
     <string>-</string>
@@ -145,9 +145,9 @@
     <string>SSID</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBoxMac">
+  <widget class="QCheckBox" name="checkBoxMAC">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
@@ -159,19 +159,6 @@
    </property>
    <property name="text">
     <string>MAC</string>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="comboBoxMac">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>170</y>
-     <width>161</width>
-     <height>25</height>
-    </rect>
    </property>
   </widget>
   <widget class="QPushButton" name="buttonSave">
@@ -203,13 +190,42 @@
     </rect>
    </property>
    <property name="toolTip">
-    <string>Show only SSID containing this text, case sensitive. e.g.: oo will show FooBar, BarFoo</string>
+    <string>Match SSID containing the string, case sensitive. e.g.: Oo will show FOoBar</string>
    </property>
    <property name="text">
     <string/>
    </property>
    <property name="maxLength">
     <number>32</number>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditMAC">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>170</y>
+     <width>161</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Match MAC containing the string, case insensitive. ? for wildcard.
+Examples: ??:02:03:04:05:06, 0a-0b-0c-0d-0e-??</string>
+   </property>
+   <property name="inputMask">
+    <string/>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="maxLength">
+    <number>17</number>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

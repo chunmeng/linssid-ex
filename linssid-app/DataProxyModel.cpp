@@ -42,6 +42,7 @@ public:
     bool isChannelInBuckets(int channel) const;
     bool acceptChannel(int channel) const;
     bool acceptSsid(const string &ssid) const;
+    bool acceptMac(const string &mac) const;
 
 public:
     FilterState state;
@@ -106,6 +107,20 @@ bool DataProxyModel::Impl::acceptSsid(const string& ssid) const
     return true;
 }
 
+bool DataProxyModel::Impl::acceptMac(const string& mac) const
+{
+    if (state.byMac) {
+        if (state.mac.empty()) return true;    // Accept anything
+        if (state.mac.size() != mac.size()) return false;   // Can't compare, bail
+        // Accept if match
+        for (std::string::size_type i = 0; i < state.mac.size(); ++i) {
+            if (state.mac[i] == '?' || state.mac[i] == '-' || state.mac[i] == ':') continue;
+            if (tolower(state.mac[i]) != tolower(mac[i])) return false;
+        }
+    }
+    return true;
+}
+
 DataProxyModel::DataProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
     , impl_(new Impl())
@@ -133,7 +148,10 @@ bool DataProxyModel::filterAcceptsRow(int sourceRow,
     QModelIndex ssidIndex = sourceModel()->index(sourceRow, SSID, sourceParent);
     auto ssid = sourceModel()->data(ssidIndex).toString();
     if (!impl_->acceptSsid(ssid.toStdString())) return false;
-    // @TODO: Filter by mac, etc
+
+    QModelIndex macIndex = sourceModel()->index(sourceRow, MAC, sourceParent);
+    auto mac = sourceModel()->data(macIndex).toString();
+    if (!impl_->acceptMac(mac.toStdString())) return false;
     return true;
 }
 

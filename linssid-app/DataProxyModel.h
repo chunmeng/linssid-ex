@@ -18,6 +18,8 @@ struct FilterState {
     std::string channels = "1-165";
     bool bySsid = false;
     std::string ssid = "";
+    bool byMac = false;
+    std::string mac = "";
 };
 
 class DataProxyModel : public QSortFilterProxyModel

@@ -18,16 +18,14 @@ public:
 public slots:
     void bandGroupChanged(bool);
     void bandChanged(int);
-    void channelChanged(int);
-    void channelTextChanged();
-    void ssidChanged(int);
-    void ssidTextChanged();
 
 signals:
     void filterUpdated(const FilterState& opt);
 
 private:
     void initUiStates(const FilterState& opt);
+    void checkboxChanged(bool enabled, bool& filterState, QLineEdit& bindedLineEdit);
+    void textChanged(const std::string& tag, std::string& filterText, const std::string& lineEditText);
 
 private:
     Ui::ViewFilterDialog widget;
