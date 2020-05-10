@@ -202,7 +202,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../../../../../../usr/share/linssid/linssid-filter.png</normaloff>linssid-filter.png</iconset>
+             <normaloff>../../../../../../../usr/share/linssid/filter.png</normaloff>filter.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -282,8 +282,8 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../../../../../../usr/share/linssid/linssid-start.png</normaloff>
-             <normalon>../../../../../../../usr/share/linssid/linssid-pause.png</normalon>../../../../../../../usr/share/linssid/linssid-start.png</iconset>
+             <normaloff>../../../../../../../usr/share/linssid/start.png</normaloff>
+             <normalon>../../../../../../../usr/share/linssid/pause.png</normalon>../../../../../../../usr/share/linssid/start.png</iconset>
            </property>
            <property name="iconSize">
             <size>
