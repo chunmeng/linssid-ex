@@ -8,3 +8,8 @@ Makefile
 */moc_*.cpp
 */ui_*.h
 */ui_*.cpp
+debian/.debhelper/
+debian/files
+debian/linssid.debhelper.log
+debian/linssid.substvars
+debian/linssid/
