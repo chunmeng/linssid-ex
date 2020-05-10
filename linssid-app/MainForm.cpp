@@ -122,9 +122,12 @@ int MainForm::columnWidth[MAX_TABLE_COLS]; // since Qt doesn't see fit to rememb
 MainForm::MainForm() {
 
     MainForm::mainFormWidget.setupUi(this);
+    // Button widget actions
     connect(MainForm::mainFormWidget.runBtn, SIGNAL(clicked()), this, SLOT(doRun()));
     connect(MainForm::mainFormWidget.allBtn, SIGNAL(clicked()), this, SLOT(doPlotAll()));
     connect(MainForm::mainFormWidget.noneBtn, SIGNAL(clicked()), this, SLOT(doPlotNone()));
+    connect(MainForm::mainFormWidget.filterBtn, SIGNAL(clicked()), this, SLOT(showViewFilterDlg()));
+    // Menu item actions
     connect(MainForm::mainFormWidget.actionSSID, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionMAC, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionChannel, SIGNAL(changed()), this, SLOT(reDrawTable()));
