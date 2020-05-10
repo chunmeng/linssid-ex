@@ -9,14 +9,16 @@ Build-Depends: debhelper (>= 9),
                qt5-default,
                libqwt-qt5-6,
                libqwt-headers
-Standards-Version: 3.9.6
-Homepage: http://sourceforge.net/projects/linssid
+Standards-Version: 3.6-ext
+Homepage: https://github.com/chunmeng/linssid-ex
 
 Package: linssid
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, iw, wireless-tools, policykit-1
 Recommends:
 Description: Graphical wireless scanner
+ .
+ LinSSID-ext is based on LinSSID with extended functionalities.
  .
  LinSSID displays locally receivable 802.11 wireless attach points
  and ad hoc networks. A table is displayed with various parameters

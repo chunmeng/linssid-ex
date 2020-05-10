@@ -1,3 +1,10 @@
+linssid (3.6-ext) bionic; urgency=low
+
+  * Added view filters by band, channel, SSID and MAC
+  * Added function to label plots with SSID
+
+ -- chunmeng <chunmeng@yahoo.com>  Sun, 10 May 2020 14:30:30 +0800
+
 linssid (3.6-1) bionic; urgency=low
 
   * Attempts to resolve 802.11s mesh network nodes to their master. If
