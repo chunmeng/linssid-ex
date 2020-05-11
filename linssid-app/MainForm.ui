@@ -505,7 +505,6 @@
     <addaction name="actionExport_to_NS1"/>
     <addaction name="separator"/>
     <addaction name="actionPrefs"/>
-    <addaction name="actionViewFilter"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -818,11 +817,6 @@
   <action name="actionPrefs">
    <property name="text">
     <string>&amp;Preferences...</string>
-   </property>
-  </action>
-  <action name="actionViewFilter">
-   <property name="text">
-    <string>Vie&amp;w Filter...</string>
    </property>
   </action>
   <action name="actionProtocol">

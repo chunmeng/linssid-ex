@@ -153,7 +153,6 @@ MainForm::MainForm() {
     connect(MainForm::mainFormWidget.actionType, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionAbout, SIGNAL(triggered()), this, SLOT(showAboutBox()));
     connect(MainForm::mainFormWidget.actionPrefs, SIGNAL(triggered()), this, SLOT(showPrefsDlg()));
-    connect(MainForm::mainFormWidget.actionViewFilter, SIGNAL(triggered()), this, SLOT(showViewFilterDlg()));
 
     model_ = make_unique<QStandardItemModel>();
     model_->setColumnCount(MAX_TABLE_COLS);
