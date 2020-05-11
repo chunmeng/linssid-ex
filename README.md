@@ -19,9 +19,9 @@ The initial source is based on LinSSID 3.6. (https://sourceforge.net/projects/li
 - Fea: Save filter setting to preference
 - Fea: Add column for AP capability
 - Fea: Add user preference/option to allow plotting of filtered row
-- Enchancement: Look into channel filter string regex to prevent entries like (1-1-1,111111)
-- Enchancement: Align the view filter dialog to main form
-- Enchancement: textbox editing with validator is arkward (only allow 1 char change at a time)
+- Fea: Stats - Busiest channels
+- Enhancement: Look into channel filter string regex to prevent entries like (1-1-1,111111)
+- Enhancement: textbox editing with validator is arkward (only allow 1 char change at a time)
 - Release: Try make a deb package
 
 ## Build Requirement

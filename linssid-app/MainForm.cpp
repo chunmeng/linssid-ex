@@ -49,6 +49,7 @@
 #include "VendorDb.h"
 #include "DataProxyModel.h"
 #include "ViewFilterDialog.h"
+#include "Logger.h"
 
 extern int lastBlockRequested;
 extern int lastBlockReceived;
@@ -60,6 +61,7 @@ extern runStates runstate;
 extern int realUID;
 extern struct passwd *realUser;
 extern string fullPrefsName;
+extern Logger AppLogger;
 
 extern string genPipeName(int);
 
@@ -122,9 +124,12 @@ int MainForm::columnWidth[MAX_TABLE_COLS]; // since Qt doesn't see fit to rememb
 MainForm::MainForm() {
 
     MainForm::mainFormWidget.setupUi(this);
+    // Button widget actions
     connect(MainForm::mainFormWidget.runBtn, SIGNAL(clicked()), this, SLOT(doRun()));
     connect(MainForm::mainFormWidget.allBtn, SIGNAL(clicked()), this, SLOT(doPlotAll()));
     connect(MainForm::mainFormWidget.noneBtn, SIGNAL(clicked()), this, SLOT(doPlotNone()));
+    connect(MainForm::mainFormWidget.filterBtn, SIGNAL(clicked()), this, SLOT(showViewFilterDlg()));
+    // Menu item actions
     connect(MainForm::mainFormWidget.actionSSID, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionMAC, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionChannel, SIGNAL(changed()), this, SLOT(reDrawTable()));
@@ -148,7 +153,6 @@ MainForm::MainForm() {
     connect(MainForm::mainFormWidget.actionType, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(MainForm::mainFormWidget.actionAbout, SIGNAL(triggered()), this, SLOT(showAboutBox()));
     connect(MainForm::mainFormWidget.actionPrefs, SIGNAL(triggered()), this, SLOT(showPrefsDlg()));
-    connect(MainForm::mainFormWidget.actionViewFilter, SIGNAL(triggered()), this, SLOT(showViewFilterDlg()));
 
     model_ = make_unique<QStandardItemModel>();
     model_->setColumnCount(MAX_TABLE_COLS);
@@ -531,6 +535,11 @@ void MainForm::showViewFilterDlg()
 {
     if (viewFilterDlg_ == nullptr) {
         viewFilterDlg_ = make_unique<ViewFilterDialog>(this, (QObject*)this->proxyModel_.get());
+        // First time - adjust position relative to MainForm
+        QPoint pos(this->x() + this->width() - viewFilterDlg_->width(), this->y() + 200);
+        viewFilterDlg_->move(pos);
+        DebugLog(AppLogger) << "Adjusting filter dialog to (" << pos.x() << ", " << pos.y()
+            << "), parent is at (" << this->x() << "+" << this->width() << ", " << this->y() << "+" << this->height() << ")";
     }
     // Make modeless dialog that stay on top of the parent window (when it's on focus)
     // Follow this example: https://doc.qt.io/qt-5/qtwidgets-widgets-windowflags-example.html
@@ -1031,8 +1040,13 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
             boost::regex_constants::icase))) { // group cipher
         MainForm::cellDataRay[tbi].privacy = sm[1];
     } else if (pageBlock == BT_HT_CAPABILITIES && boost::regex_match(tl, sm, boost::regex(".*?HT20/HT40.*",
-            boost::regex_constants::icase))) { // Bandwidth HT 40 MHz
+            boost::regex_constants::icase))) { // HT Capabilities - HT20/HT40 if 40 MHz capable, actual BW is determined from HT Op
         MainForm::cellDataRay[tbi].BW = 40;
+    } else if (pageBlock == BT_HT_OPERATION && boost::regex_match(tl, sm, boost::regex("^.*?STA channel width: (any|\\d+).*",
+            boost::regex_constants::icase))) {
+        string bwString = sm[1];
+        if (bwString == "any") return; // Dont change, use bw derived from HT Capabilities
+        MainForm::cellDataRay[tbi].BW = atoi(bwString.c_str());
     } else if (pageBlock == BT_VHT_OPERATION && boost::regex_match(tl, sm, boost::regex(".*?\\* channel width:.*?([0-9]).*?([0-9]+) MHz.*",
             boost::regex_constants::icase))) { // Bandwidth VHT
         int val = atoi(string(sm[1]).c_str());

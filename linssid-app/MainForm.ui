@@ -107,19 +107,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="8">
-          <widget class="QLabel" name="statusLbl">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Status</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="10">
           <widget class="QLabel" name="graphLbl">
            <property name="toolTip">
@@ -187,7 +174,74 @@
            </item>
           </layout>
          </item>
-         <item row="0" column="8">
+         <item row="0" column="9">
+          <widget class="QPushButton" name="filterBtn">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>52</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>52</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Bring up the filter dialog</string>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>../../../../../../../usr/share/linssid/filter.png</normaloff>filter.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="9">
+          <widget class="QLabel" name="filterLbl">
+           <property name="minimumSize">
+            <size>
+             <width>52</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Filter</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QLabel" name="statusLbl">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Status</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
           <widget class="QLabel" name="statusTxt">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -203,7 +257,7 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="7">
+         <item row="0" column="3">
           <widget class="QPushButton" name="runBtn">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -228,8 +282,8 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../../../../../../usr/share/linssid/linssid-start.png</normaloff>
-             <normalon>../../../../../../../usr/share/linssid/linssid-pause.png</normalon>../../../../../../../usr/share/linssid/linssid-start.png</iconset>
+             <normaloff>../../../../../../../usr/share/linssid/start.png</normaloff>
+             <normalon>../../../../../../../usr/share/linssid/pause.png</normalon>../../../../../../../usr/share/linssid/start.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -245,7 +299,7 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="7">
+         <item row="1" column="3">
           <widget class="QLabel" name="runLbl">
            <property name="baseSize">
             <size>
@@ -261,7 +315,7 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="6">
+         <item row="1" column="2">
           <widget class="QLabel" name="interfaceLbl">
            <property name="minimumSize">
             <size>
@@ -277,7 +331,7 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="6">
+         <item row="0" column="2">
           <widget class="QComboBox" name="interfaceCbx">
            <property name="minimumSize">
             <size>
@@ -441,7 +495,7 @@
      <x>0</x>
      <y>0</y>
      <width>759</width>
-     <height>30</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -451,7 +505,6 @@
     <addaction name="actionExport_to_NS1"/>
     <addaction name="separator"/>
     <addaction name="actionPrefs"/>
-    <addaction name="actionViewFilter"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -764,11 +817,6 @@
   <action name="actionPrefs">
    <property name="text">
     <string>&amp;Preferences...</string>
-   </property>
-  </action>
-  <action name="actionViewFilter">
-   <property name="text">
-    <string>Vie&amp;w Filter...</string>
    </property>
   </action>
   <action name="actionProtocol">
