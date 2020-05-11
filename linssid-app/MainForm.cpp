@@ -49,6 +49,7 @@
 #include "VendorDb.h"
 #include "DataProxyModel.h"
 #include "ViewFilterDialog.h"
+#include "Logger.h"
 
 extern int lastBlockRequested;
 extern int lastBlockReceived;
@@ -60,6 +61,7 @@ extern runStates runstate;
 extern int realUID;
 extern struct passwd *realUser;
 extern string fullPrefsName;
+extern Logger AppLogger;
 
 extern string genPipeName(int);
 
@@ -534,6 +536,11 @@ void MainForm::showViewFilterDlg()
 {
     if (viewFilterDlg_ == nullptr) {
         viewFilterDlg_ = make_unique<ViewFilterDialog>(this, (QObject*)this->proxyModel_.get());
+        // First time - adjust position relative to MainForm
+        QPoint pos(this->x() + this->width() - viewFilterDlg_->width(), this->y() + 200);
+        viewFilterDlg_->move(pos);
+        DebugLog(AppLogger) << "Adjusting filter dialog to (" << pos.x() << ", " << pos.y()
+            << "), parent is at (" << this->x() << "+" << this->width() << ", " << this->y() << "+" << this->height() << ")";
     }
     // Make modeless dialog that stay on top of the parent window (when it's on focus)
     // Follow this example: https://doc.qt.io/qt-5/qtwidgets-widgets-windowflags-example.html
