@@ -1041,8 +1041,13 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
             boost::regex_constants::icase))) { // group cipher
         MainForm::cellDataRay[tbi].privacy = sm[1];
     } else if (pageBlock == BT_HT_CAPABILITIES && boost::regex_match(tl, sm, boost::regex(".*?HT20/HT40.*",
-            boost::regex_constants::icase))) { // Bandwidth HT 40 MHz
+            boost::regex_constants::icase))) { // HT Capabilities - HT20/HT40 if 40 MHz capable, actual BW is determined from HT Op
         MainForm::cellDataRay[tbi].BW = 40;
+    } else if (pageBlock == BT_HT_OPERATION && boost::regex_match(tl, sm, boost::regex("^.*?STA channel width: (any|\\d+).*",
+            boost::regex_constants::icase))) {
+        string bwString = sm[1];
+        if (bwString == "any") return; // Dont change, use bw derived from HT Capabilities
+        MainForm::cellDataRay[tbi].BW = atoi(bwString.c_str());
     } else if (pageBlock == BT_VHT_OPERATION && boost::regex_match(tl, sm, boost::regex(".*?\\* channel width:.*?([0-9]).*?([0-9]+) MHz.*",
             boost::regex_constants::icase))) { // Bandwidth VHT
         int val = atoi(string(sm[1]).c_str());
