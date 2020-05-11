@@ -12,7 +12,6 @@ The initial source is based on LinSSID 3.6. (https://sourceforge.net/projects/li
 - Fea: Added filter by channel
 - Fea: Added filter by SSID
 - Fea: Added filter by MAC
-- Enhancement: Align the view filter dialog to main form
 
 ![ScreenShot](/screenshots/latest.png?raw=true "Current Application View")
 
