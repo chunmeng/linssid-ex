@@ -41,7 +41,6 @@ public:
 
     MainForm();
     virtual ~MainForm();
-    //    void run();
     void init();
     void getUserID();
     void addInterfaces();
@@ -75,7 +74,6 @@ public:
     static long blockSampleTime;
     static long now;
     static int logDataState;
-    static bool firstScan;
     static QFont tblFnt;
     static QString fntSizes[];
     static int numFntSizes;
@@ -100,8 +98,8 @@ public slots:
 
 protected:
     Ui::mainForm mainFormWidget;
-    void customEvent(QEvent*); // This overrides QObject::customEvent()
-    void closeEvent(QCloseEvent*); // Overides built-in closeEvent()
+    void customEvent(QEvent*) override;
+    void closeEvent(QCloseEvent*) override;
     void handleDataReadyEvent(const DataReadyEvent*);
 
 private:
@@ -111,18 +109,20 @@ private:
     bool shouldBePlot(int tbi);
 
 private:
-    std::unique_ptr<prefsDialog> prefsDlg;
+    std::unique_ptr<prefsDialog> prefsDlg_;
     std::unique_ptr<ViewFilterDialog> viewFilterDlg_;
 
     std::unique_ptr<DataProxyModel> proxyModel_;
     std::unique_ptr<QStandardItemModel> model_;
-    std::unique_ptr<DataLogger> dataLogger;
-    std::unique_ptr<VendorDb> vendorDb;
-    std::unique_ptr<PrefsHandler> prefsHandler;
-    std::unique_ptr<QLabel> statusCounts;
-    Stats stats;
+    std::unique_ptr<DataLogger> dataLogger_;
+    std::unique_ptr<VendorDb> vendorDb_;
+    std::unique_ptr<PrefsHandler> prefsHandler_;
+    std::unique_ptr<QLabel> statusCounts_;
+    Stats stats_;
 
-    bool plotShowLabel = true;
+    // Internal states variables
+    bool plotShowLabel_ = true;
+    bool firstScan_ = false;
 };
 
 #endif	/* _MAINFORM_H */

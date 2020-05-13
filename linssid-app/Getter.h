@@ -24,13 +24,11 @@ public:
     static MainForm* pMainForm; // a pointer to the instance of the MainForm that calls this Getter
 
     void run();
-
     int getWantedBlockNo();
-
     void postDataWantedEvent(const int);
 
 protected:
-    void customEvent(QEvent *); // This overrides QObject::customEvent()
+    void customEvent(QEvent *) override;
 
 private:
     void handleDataWantedEvent(const DataWantedEvent *);

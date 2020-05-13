@@ -79,7 +79,6 @@ long MainForm::now; // absolute time of the block
 pageBlockType pageBlock; // which section of page is data coming from
 int MainForm::logDataState;
 long MainForm::blockSampleTime; // time of the block relative to runStartTime
-bool MainForm::firstScan; // do we need to get sudo privileges?
 
 // Local unnamed namespace
 namespace {
@@ -173,7 +172,7 @@ MainForm::MainForm() {
     lastBlockRequested = 0; // these global variables should be made protected
     lastBlockReceived = 0;
     startTime = QDateTime::currentMSecsSinceEpoch();
-    MainForm::firstScan = true;
+    firstScan_ = true;
 }
 
 MainForm::~MainForm() {
@@ -195,8 +194,8 @@ void MainForm::init() {
     MainForm::drawChan5Plot();
     MainForm::drawTimePlot();
     extern string fullLogName;
-    MainForm::dataLogger = make_unique<DataLogger>(fullLogName);
-    MainForm::vendorDb = make_unique<VendorDb>();
+    dataLogger_ = make_unique<DataLogger>(fullLogName);
+    vendorDb_ = make_unique<VendorDb>();
 }
 
 void MainForm::initColtoAction() {
@@ -242,13 +241,13 @@ void MainForm::initPlotGrids() {
 }
 
 void MainForm::initStatusBar() {
-    MainForm::statusCounts = make_unique<QLabel>();
-    MainForm::statusCounts->setText(QString::fromStdString((MainForm::stats.toString())));
-    MainForm::mainFormWidget.statusbar->addPermanentWidget(MainForm::statusCounts.get());
+    statusCounts_ = make_unique<QLabel>();
+    statusCounts_->setText(QString::fromStdString((stats_.toString())));
+    MainForm::mainFormWidget.statusbar->addPermanentWidget(statusCounts_.get());
 }
 
 void MainForm::fillStatus() {
-    MainForm::statusCounts->setText(QString::fromStdString((MainForm::stats.toString())));
+    statusCounts_->setText(QString::fromStdString((stats_.toString())));
 }
 
 void MainForm::addInterfaces() {
@@ -338,7 +337,7 @@ void MainForm::applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGr
 void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, bool showGrid, bool showLabel) {
     // a slot called from the prefs dialog to dynamically update the plots
     applyPlotPrefs(tblFntSize.toInt(), plotMin, plotMax, showGrid);
-    this->plotShowLabel = showLabel;
+    this->plotShowLabel_ = showLabel;
     MainForm::reDrawTable();
     MainForm::mainFormWidget.timePlot->replot();
     MainForm::mainFormWidget.chan24Plot->replot();
@@ -373,14 +372,14 @@ void MainForm::savePrefs() {
                          .plotlb = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()),
                          .plotub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()),
                          .showgrid = MainForm::timeGrid->yEnabled(),
-                         .showLabel = this->plotShowLabel};
+                         .showLabel = this->plotShowLabel_};
     appPref.logData = MainForm::logDataState;
-    if (prefsHandler) prefsHandler->save(appPref);
+    if (prefsHandler_) prefsHandler_->save(appPref);
 }
 
 void MainForm::loadPrefs() {
-    if (!prefsHandler) prefsHandler = make_unique<PrefsHandler>(fullPrefsName);
-    PrefsHandler::sDefPref appPref = prefsHandler->load();
+    if (!prefsHandler_) prefsHandler_ = make_unique<PrefsHandler>(fullPrefsName);
+    PrefsHandler::sDefPref appPref = prefsHandler_->load();
 
     for (int col = 0; col < MAX_TABLE_COLS; col++) {
         if (appPref.colwidth[col] > 0) {
@@ -424,7 +423,7 @@ void MainForm::loadPrefs() {
     bool showGrid = appPref.plotprefs.showgrid;
     applyPlotPrefs(fntSize, plotLb, plotUb, showGrid);
     MainForm::mainFormWidget.mainTableView->setFont(tblFnt);
-    this->plotShowLabel = appPref.plotprefs.showLabel;
+    this->plotShowLabel_ = appPref.plotprefs.showLabel;
     MainForm::logDataState = appPref.logData;
 }
 
@@ -436,8 +435,8 @@ void MainForm::postDataReadyEvent(const int customData1) {
 void MainForm::doRun() {
     extern runStates runState;
     if (MainForm::mainFormWidget.runBtn->isChecked()) {
-        if (firstScan) {
-            firstScan = false;
+        if (firstScan_) {
+            firstScan_ = false;
             MainForm::runStartTime = time(NULL);
         }
         MainForm::mainFormWidget.statusTxt->setText("Scanning ...");
@@ -488,17 +487,17 @@ void MainForm::showAboutBox() {
 }
 
 void MainForm::showPrefsDlg() {
-    if (prefsDlg != nullptr) return; // already a prefs dialog open somewhere...
-    prefsDlg = make_unique<prefsDialog>(
+    if (prefsDlg_ != nullptr) return; // already a prefs dialog open somewhere...
+    prefsDlg_ = make_unique<prefsDialog>(
             QString::number(MainForm::tblFnt.pointSize()),
             int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()),
             int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()),
             MainForm::timeGrid->yEnabled(),
-            this->plotShowLabel,
+            this->plotShowLabel_,
             MainForm::logDataState,
             (QObject*)this);
-    prefsDlg->exec();
-    prefsDlg.reset();
+    prefsDlg_->exec();
+    prefsDlg_.reset();
 }
 
 void MainForm::showViewFilterDlg()
@@ -545,7 +544,7 @@ void MainForm::closeEvent(QCloseEvent * event) {
     MainForm::mainFormWidget.statusTxt->setText("Closing ...");
     MainForm::mainFormWidget.statusTxt->repaint();
     remove(pipeName.c_str());
-    dataLogger.reset();
+    dataLogger_.reset();
     //    QMainWindow::closeEvent(event);
     event->accept();
     std::exit(0); // that's the system exit, not the Qt version
@@ -606,7 +605,7 @@ void MainForm::setVisibleCols() {
 }
 
 void MainForm::fillTable() {
-    MainForm::stats.reset();
+    stats_.reset();
     MainForm::mainFormWidget.mainTableView->setFont(tblFnt);
     
     // fill in the x-y, also set each cell text alignment
@@ -614,14 +613,14 @@ void MainForm::fillTable() {
     for (int row = 0; row <= maxTableIndex; row++) {
         MainForm::cellDataRay[row].pTableItem[SSID]->
                 setText(MainForm::cellDataRay[row].essid.c_str());
-        if (MainForm::cellDataRay[row].essid == "<hidden>") MainForm::stats.totalHidden++;
+        if (MainForm::cellDataRay[row].essid == "<hidden>") stats_.totalHidden++;
         MainForm::cellDataRay[row].pTableItem[MAC]->
                 setText(MainForm::cellDataRay[row].macAddr.c_str());
         MainForm::cellDataRay[row].pTableItem[MAC]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[CHANNEL]->
                 setData(MainForm::cellDataRay[row].channel,Qt::DisplayRole);
-        if (MainForm::cellDataRay[row].channel <= 14) MainForm::stats.total2GBss++;
-        else MainForm::stats.total5GBss++;
+        if (MainForm::cellDataRay[row].channel <= 14) stats_.total2GBss++;
+        else stats_.total5GBss++;
         MainForm::cellDataRay[row].pTableItem[CHANNEL]->setTextAlignment(Qt::AlignCenter);
         MainForm::cellDataRay[row].pTableItem[MODE]->
                 setText(MainForm::cellDataRay[row].mode.c_str());
@@ -632,7 +631,7 @@ void MainForm::fillTable() {
         MainForm::cellDataRay[row].pTableItem[SECURITY]->
                 setText(MainForm::cellDataRay[row].security.c_str());
         MainForm::cellDataRay[row].pTableItem[SECURITY]->setTextAlignment(Qt::AlignCenter);
-        if (MainForm::cellDataRay[row].security.empty()) MainForm::stats.totalOpen++;
+        if (MainForm::cellDataRay[row].security.empty()) stats_.totalOpen++;
         MainForm::cellDataRay[row].pTableItem[PRIVACY]->
                 setText((MainForm::cellDataRay[row].privacy).c_str());
         MainForm::cellDataRay[row].pTableItem[PRIVACY]->setTextAlignment(Qt::AlignCenter);
@@ -743,7 +742,7 @@ void MainForm::fillPlots() {
         if (shouldBePlot(tbi)) {
             markerSymbol->setStyle(MainForm::cellDataRay[tbi].BW >= 40 ? QwtSymbol::Diamond : QwtSymbol::Triangle);
 
-            if (this->plotShowLabel) {
+            if (this->plotShowLabel_) {
                 QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi].essid);
                 markerLabel.setColor(MainForm::cellDataRay[tbi].color);
                 int ub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound());
@@ -811,7 +810,7 @@ void MainForm::fillPlots() {
             MainForm::cellDataRay[tbi].pSignalTimeMarker->setValue( 
                 QPointF((float)MainForm::cellDataRay[tbi].pHistory->sampleSec[ixStart+ixLength-1],
                 MainForm::cellDataRay[tbi].signal));
-            if (this->plotShowLabel) {
+            if (this->plotShowLabel_) {
                 QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi].essid);
                 markerLabel.setColor(MainForm::cellDataRay[tbi].color);
                 MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabelAlignment(Qt::AlignLeft | Qt::AlignTop);
@@ -870,7 +869,7 @@ void MainForm::initNewCell(string macAddress, int tbi) {
     MainForm::cellDataRay[tbi].firstSeen = now;
     MainForm::cellDataRay[tbi].firstPlot = true;
     MainForm::cellDataRay[tbi].protocol = "unknown";
-    MainForm::cellDataRay[tbi].vendor = vendorDb->lookup(macAddress);
+    MainForm::cellDataRay[tbi].vendor = vendorDb_->lookup(macAddress);
     MainForm::cellDataRay[tbi].pHistory = make_unique<History>(); // give it a history
     MainForm::cellDataRay[tbi].pTimeCurve = make_unique<QwtPlotCurve>(""); // and a history curve
     QColor tempColor = qColorArray[tbi % NUMBER_OF_COLORS];
@@ -1094,7 +1093,7 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
                 MainForm::fillPlots();
                 MainForm::fillStatus();
                 if (MainForm::logDataState == Qt::Checked) {
-                    dataLogger->log(MainForm::cellDataRay);
+                    dataLogger_->log(MainForm::cellDataRay);
                 }
             }
         }
