@@ -934,7 +934,6 @@ void MainForm::initNewCell(string macAddress, int tbi) {
 }
 
 void MainForm::extractData(string tl, int &tbi, int &newBSS) {
-    // std::cout << "Dump: " << tl << endl;
     // extract the information from each line recovered from the pipe from getter
     boost::smatch sm;
     if (boost::regex_match(tl, sm, boost::regex("^BSS.*?(([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}).*",
@@ -943,7 +942,8 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
         string macAddress = sm[1];
         //string macAddress = boost::regex_replace(tl,
         //        boost::regex(".+?((?:[A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}).*"), "$1");
-        for (unsigned int ic=0; ic< macAddress.length(); ic++) macAddress[ic] = toupper(macAddress[ic]);
+        for (unsigned int ic=0; ic< macAddress.length(); ic++)
+            macAddress[ic] = toupper(macAddress[ic]);
         tbi = MainForm::maxTableIndex + 1;
         for (int ix = 0; ix <= MainForm::maxTableIndex; ix++) {
             if (macAddress == MainForm::cellDataRay[ix].macAddr) {
@@ -962,13 +962,10 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
         MainForm::cellDataRay[tbi].lastSeen = now;
         MainForm::cellDataRay[tbi].BW = 20; // all have at least 20 MHz bandwidth
         MainForm::cellDataRay[tbi].protocol = "";
-    } 
-       else if (boost::regex_match(tl, sm, boost::regex("^.+?SSID: +(.*)"))) {
+    } else if (boost::regex_match(tl, sm, boost::regex("^.+?SSID: +(.*)"))) {
         string tempSSID = sm[1];
-        if (MainForm::cellDataRay[tbi].essid == "<hidden>" && tempSSID != "") {
-            MainForm::cellDataRay[tbi].essid = tempSSID;
-        }
-    }  else if (boost::regex_match(tl, sm, boost::regex(
+        MainForm::cellDataRay[tbi].essid = !tempSSID.empty() ? tempSSID : "<hidden>";
+    } else if (boost::regex_match(tl, sm, boost::regex(
             "^[ \\t]+Supported rates: (.*)", boost::regex_constants::icase))) { // protocol
         string tempStr = sm[1];
         if (Utils::MinIntStr(tempStr) < 11) MainForm::cellDataRay[tbi].protocol += "b";
