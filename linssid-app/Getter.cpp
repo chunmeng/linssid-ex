@@ -5,22 +5,18 @@
  * Created on October 31, 2012, 8:59 AM
  */
 
-#include <iostream>
-#include <fstream>
 #include <sstream>
-#include <iomanip>
 #include <string>
-#include <random>
 #include <QtCore>
-#include <QString>
 #include <QThread>
 #include <QtWidgets>
-#include <stdio.h>
 #include "Custom.h"
 #include "CustomEvent.h"
 #include "Getter.h"
+#include "Logger.h"
 #include "MainForm.h"
 #include "ui_MainForm.h"
+#include "Utils.h"
 
 using namespace std;
 
@@ -29,7 +25,7 @@ extern qint64 startTime;
 extern string beginBlockString;
 extern string endBlockString;
 extern string pipeName;
-// extern ofstream linssidLog;
+extern Logger AppLogger;
 extern runStates runState;
 
 Getter::Getter() = default;
@@ -67,9 +63,8 @@ void Getter::handleDataWantedEvent(const DataWantedEvent *event) {
     while (true) {
         cppIsStupid.str("");
         cppIsStupid << " " << blockNo;
-        string lineCommand = 
+        string lineCommand =
                 "echo \"" + beginBlockString + cppIsStupid.str() + "\" >> " + pipeName;
-//                "echo \"" + beginBlockString + cppIsStupid.str() + "\\n\" >> " + pipeName;
         lineCommand += " ; iw ";
         lineCommand += Getter::pMainForm->getCurrentInterface() + " scan >> " + pipeName;
         for (int retries = 0; retries < 10; retries++) {
@@ -79,27 +74,22 @@ void Getter::handleDataWantedEvent(const DataWantedEvent *event) {
         }
         if (rcSysCall != 0) { // retries exhausted on multiple failures
             endCommand = "echo \"" + endBlockString + " -1\\n\" >> " + pipeName;
-            // linssidLog << "Getter: command failed block " << blockNo << endl;
+            ErrorLog(AppLogger) << "Getter: command failed block " << blockNo << endl;
         } else { // success!
             endCommand = "echo \"" + endBlockString + cppIsStupid.str() + "\\n\" >> " + pipeName;
-            // linssidLog << "Getter: block returned " << blockNo << endl;
+            VerboseLog(AppLogger) << "Getter: block returned " << blockNo << endl;
         }
 
-        waste(system(endCommand.c_str())); // put the end block tag in the stream
+        Utils::waste(system(endCommand.c_str())); // put the end block tag in the stream
 
         Getter::pMainForm->postDataReadyEvent(blockNo);
         blockNo+=1;
-        
+
         if (runState == RUNNING) QThread::msleep(500);
         for (int wink=0; (wink < Getter::pMainForm->getNapTime()) && (runState == RUNNING); wink++) {
-            QThread::msleep(1000);        
+            QThread::msleep(1000);
         }
         if (runState != RUNNING) break; // exit the infinite while loop
     }
     runState = STOPPED;
-}
-
-inline void Getter::waste(int) {
-    // This silliness is to ignore an argument function's return code without
-    // having the compiler whine about it.
 }

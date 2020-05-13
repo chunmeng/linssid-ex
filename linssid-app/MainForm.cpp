@@ -59,7 +59,6 @@ extern int lastBlockReceived;
 extern qint64 startTime;
 extern string endBlockString;
 extern string pipeName;
-// extern ofstream linssidLog;
 extern runStates runstate;
 extern int realUID;
 extern struct passwd *realUser;
@@ -199,18 +198,6 @@ void MainForm::init() {
     MainForm::dataLogger = make_unique<DataLogger>(fullLogName);
     MainForm::vendorDb = make_unique<VendorDb>();
 }
-// saving as comments in case ever need it again...
-// reimplemented from QApplication so we can throw exceptions in slots
-
-//virtual bool notify(QObject * receiver, QEvent * event) {
-//    try {
-//        return QApplication::notify(receiver, event);
-//    } catch (std::exception& e) {
-//        qCritical() << "Exception thrown:" << e.what();
-//        linssidLog << "Exception caught by notify: " << e.what() << endl;
-//    }
-//    return false;
-//}
 
 void MainForm::initColtoAction() {
     // brutal -- set the array of pointers from columns to their menu items
@@ -558,7 +545,6 @@ void MainForm::closeEvent(QCloseEvent * event) {
     MainForm::mainFormWidget.statusTxt->setText("Closing ...");
     MainForm::mainFormWidget.statusTxt->repaint();
     remove(pipeName.c_str());
-//    linssidLog.close();
     dataLogger.reset();
     //    QMainWindow::closeEvent(event);
     event->accept();
