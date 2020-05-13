@@ -68,20 +68,11 @@ public:
 
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
-    static CellData::Vector cellDataRay;
-    static int maxTableIndex;
-    static long runStartTime;
-    static long blockSampleTime;
-    static long now;
-    static int logDataState;
     static QFont tblFnt;
     static QString fntSizes[];
     static int numFntSizes;
     static QAction* colToQAction[MAX_TABLE_COLS];
     static int columnWidth[MAX_TABLE_COLS];
-    std::unique_ptr<QwtPlotGrid> chan24Grid;
-    std::unique_ptr<QwtPlotGrid> chan5Grid;
-    std::unique_ptr<QwtPlotGrid> timeGrid;
 
 public slots:
     void doRun();
@@ -118,11 +109,20 @@ private:
     std::unique_ptr<VendorDb> vendorDb_;
     std::unique_ptr<PrefsHandler> prefsHandler_;
     std::unique_ptr<QLabel> statusCounts_;
+    std::unique_ptr<QwtPlotGrid> chan24Grid_;
+    std::unique_ptr<QwtPlotGrid> chan5Grid_;
+    std::unique_ptr<QwtPlotGrid> timeGrid_;
     Stats stats_;
 
     // Internal states variables
+    int logDataState_;
     bool plotShowLabel_ = true;
     bool firstScan_ = false;
+    long runStartTime_;
+    long blockSampleTime_; // time of the block relative to runStartTime
+    long now_; // absolute time of the block
+    CellData::Vector cellDataRay_; // The data table
+    int maxTableIndex_; // holds the highest index pointer into cellData
 };
 
 #endif	/* _MAINFORM_H */

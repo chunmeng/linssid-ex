@@ -72,14 +72,7 @@ extern string genPipeName(int);
 // declare some variables
 Getter* MainForm::pGetter; // a pointer to our data getter
 QThread* MainForm::pGetterThread; // a pointer to its thread
-CellData::Vector MainForm::cellDataRay;
-int MainForm::maxTableIndex; // holds the highest index pointer into cellData
-long MainForm::runStartTime;
-long MainForm::now; // absolute time of the block
 pageBlockType pageBlock; // which section of page is data coming from
-int MainForm::logDataState;
-long MainForm::blockSampleTime; // time of the block relative to runStartTime
-
 // Local unnamed namespace
 namespace {
 
@@ -168,7 +161,7 @@ MainForm::MainForm() {
     connect(MainForm::mainFormWidget.mainTableView->horizontalHeader(),
             SIGNAL(sectionResized(int, int, int)), this, SLOT(columnWidthSave(int, int, int)));
 
-    MainForm::cellDataRay.reserve(50); // expect about 50 cells to be found. More or less is OK.
+    cellDataRay_.reserve(50); // expect about 50 cells to be found. More or less is OK.
     lastBlockRequested = 0; // these global variables should be made protected
     lastBlockReceived = 0;
     startTime = QDateTime::currentMSecsSinceEpoch();
@@ -183,7 +176,7 @@ void MainForm::init() {
     srand(time(NULL)); //initialize the random number generator seed
     MainForm::addInterfaces(); // find the wifi interface names and add them to the comboBox
     MainForm::setInterface(0); // set the interface select arbitrarily to 0
-    MainForm::maxTableIndex = -1;
+    maxTableIndex_ = -1;
     MainForm::drawTable();
     MainForm::initPlotGrids(); // must do before reading prefs, since prefs will modify
     MainForm::initColtoAction(); // init pointers to view menu items
@@ -229,15 +222,15 @@ void MainForm::initColtoAction() {
 
 void MainForm::initPlotGrids() {
     // add some grids to our plots
-    MainForm::chan24Grid = make_unique<QwtPlotGrid>();
-    MainForm::chan24Grid->enableX(false);
-    MainForm::chan24Grid->attach(MainForm::mainFormWidget.chan24Plot);
-    MainForm::chan5Grid = make_unique<QwtPlotGrid>();
-    MainForm::chan5Grid->enableX(false);
-    MainForm::chan5Grid->attach(MainForm::mainFormWidget.chan5Plot);
-    MainForm::timeGrid = make_unique<QwtPlotGrid>();
-    MainForm::timeGrid->enableX(false);
-    MainForm::timeGrid->attach(MainForm::mainFormWidget.timePlot);
+    chan24Grid_ = make_unique<QwtPlotGrid>();
+    chan24Grid_->enableX(false);
+    chan24Grid_->attach(MainForm::mainFormWidget.chan24Plot);
+    chan5Grid_ = make_unique<QwtPlotGrid>();
+    chan5Grid_->enableX(false);
+    chan5Grid_->attach(MainForm::mainFormWidget.chan5Plot);
+    timeGrid_ = make_unique<QwtPlotGrid>();
+    timeGrid_->enableX(false);
+    timeGrid_->attach(MainForm::mainFormWidget.timePlot);
 }
 
 void MainForm::initStatusBar() {
@@ -329,15 +322,15 @@ void MainForm::applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGr
     MainForm::mainFormWidget.timePlot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
     MainForm::mainFormWidget.chan24Plot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
     MainForm::mainFormWidget.chan5Plot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
-    MainForm::timeGrid->enableY(showGrid);
-    MainForm::chan24Grid->enableY(showGrid);
-    MainForm::chan5Grid->enableY(showGrid);
+    timeGrid_->enableY(showGrid);
+    chan24Grid_->enableY(showGrid);
+    chan5Grid_->enableY(showGrid);
 }
 
 void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, bool showGrid, bool showLabel) {
     // a slot called from the prefs dialog to dynamically update the plots
     applyPlotPrefs(tblFntSize.toInt(), plotMin, plotMax, showGrid);
-    this->plotShowLabel_ = showLabel;
+    plotShowLabel_ = showLabel;
     MainForm::reDrawTable();
     MainForm::mainFormWidget.timePlot->replot();
     MainForm::mainFormWidget.chan24Plot->replot();
@@ -345,7 +338,7 @@ void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, boo
 }
 
 void MainForm::logPrefChanged(int state) {
-    MainForm::logDataState = state;
+    logDataState_ = state;
 }
 
 void MainForm::savePrefs() {
@@ -371,9 +364,9 @@ void MainForm::savePrefs() {
     appPref.plotprefs = {.fntSize = MainForm::tblFnt.pointSize(),
                          .plotlb = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()),
                          .plotub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()),
-                         .showgrid = MainForm::timeGrid->yEnabled(),
-                         .showLabel = this->plotShowLabel_};
-    appPref.logData = MainForm::logDataState;
+                         .showgrid = timeGrid_->yEnabled(),
+                         .showLabel = plotShowLabel_};
+    appPref.logData = logDataState_;
     if (prefsHandler_) prefsHandler_->save(appPref);
 }
 
@@ -423,8 +416,8 @@ void MainForm::loadPrefs() {
     bool showGrid = appPref.plotprefs.showgrid;
     applyPlotPrefs(fntSize, plotLb, plotUb, showGrid);
     MainForm::mainFormWidget.mainTableView->setFont(tblFnt);
-    this->plotShowLabel_ = appPref.plotprefs.showLabel;
-    MainForm::logDataState = appPref.logData;
+    plotShowLabel_ = appPref.plotprefs.showLabel;
+    logDataState_ = appPref.logData;
 }
 
 void MainForm::postDataReadyEvent(const int customData1) {
@@ -437,7 +430,7 @@ void MainForm::doRun() {
     if (MainForm::mainFormWidget.runBtn->isChecked()) {
         if (firstScan_) {
             firstScan_ = false;
-            MainForm::runStartTime = time(NULL);
+            runStartTime_ = time(NULL);
         }
         MainForm::mainFormWidget.statusTxt->setText("Scanning ...");
         runState = RUNNING;
@@ -455,15 +448,15 @@ void MainForm::doRun() {
 }
 
 void MainForm::doPlotAll() {
-    for (int tbi = 0; tbi <= maxTableIndex; tbi++) {
-        MainForm::cellDataRay[tbi].pTableItem[PLOT]->setCheckState(Qt::Checked);
+    for (int tbi = 0; tbi <= maxTableIndex_; tbi++) {
+        cellDataRay_[tbi].pTableItem[PLOT]->setCheckState(Qt::Checked);
     }
     fillPlots();
 }
 
 void MainForm::doPlotNone() {
-    for (int tbi = 0; tbi <= maxTableIndex; tbi++) {
-        MainForm::cellDataRay[tbi].pTableItem[PLOT]->setCheckState(Qt::Unchecked);
+    for (int tbi = 0; tbi <= maxTableIndex_; tbi++) {
+        cellDataRay_[tbi].pTableItem[PLOT]->setCheckState(Qt::Unchecked);
     }
     fillPlots();
 }
@@ -492,9 +485,9 @@ void MainForm::showPrefsDlg() {
             QString::number(MainForm::tblFnt.pointSize()),
             int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).lowerBound()),
             int(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound()),
-            MainForm::timeGrid->yEnabled(),
-            this->plotShowLabel_,
-            MainForm::logDataState,
+            timeGrid_->yEnabled(),
+            plotShowLabel_,
+            logDataState_,
             (QObject*)this);
     prefsDlg_->exec();
     prefsDlg_.reset();
@@ -538,7 +531,7 @@ void MainForm::closeEvent(QCloseEvent * event) {
     MainForm::mainFormWidget.statusTxt->repaint();
     while (runState != STOPPED) usleep(500 * 1000); // wait until getter is stopped
     pGetterThread->QThread::quit();
-    MainForm::cellDataRay.clear();
+    cellDataRay_.clear();
     savePrefs();
     pGetterThread->QThread::wait();
     MainForm::mainFormWidget.statusTxt->setText("Closing ...");
@@ -551,7 +544,7 @@ void MainForm::closeEvent(QCloseEvent * event) {
 }
 
 void MainForm::drawTable() {
-    model_->setRowCount(MainForm::maxTableIndex + 1);
+    model_->setRowCount(maxTableIndex_ + 1);
     setVisibleCols();
     MainForm::mainFormWidget.mainTableView->horizontalHeader()->setSectionsMovable(true);
     MainForm::mainFormWidget.mainTableView->horizontalHeader()
@@ -609,72 +602,72 @@ void MainForm::fillTable() {
     MainForm::mainFormWidget.mainTableView->setFont(tblFnt);
     
     // fill in the x-y, also set each cell text alignment
-    model_->setRowCount(maxTableIndex + 1);
-    for (int row = 0; row <= maxTableIndex; row++) {
-        MainForm::cellDataRay[row].pTableItem[SSID]->
-                setText(MainForm::cellDataRay[row].essid.c_str());
-        if (MainForm::cellDataRay[row].essid == "<hidden>") stats_.totalHidden++;
-        MainForm::cellDataRay[row].pTableItem[MAC]->
-                setText(MainForm::cellDataRay[row].macAddr.c_str());
-        MainForm::cellDataRay[row].pTableItem[MAC]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[CHANNEL]->
-                setData(MainForm::cellDataRay[row].channel,Qt::DisplayRole);
-        if (MainForm::cellDataRay[row].channel <= 14) stats_.total2GBss++;
+    model_->setRowCount(maxTableIndex_ + 1);
+    for (int row = 0; row <= maxTableIndex_; row++) {
+        cellDataRay_[row].pTableItem[SSID]->
+                setText(cellDataRay_[row].essid.c_str());
+        if (cellDataRay_[row].essid == "<hidden>") stats_.totalHidden++;
+        cellDataRay_[row].pTableItem[MAC]->
+                setText(cellDataRay_[row].macAddr.c_str());
+        cellDataRay_[row].pTableItem[MAC]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[CHANNEL]->
+                setData(cellDataRay_[row].channel,Qt::DisplayRole);
+        if (cellDataRay_[row].channel <= 14) stats_.total2GBss++;
         else stats_.total5GBss++;
-        MainForm::cellDataRay[row].pTableItem[CHANNEL]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[MODE]->
-                setText(MainForm::cellDataRay[row].mode.c_str());
-        MainForm::cellDataRay[row].pTableItem[MODE]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[PROTOCOL]->
-                setText(MainForm::cellDataRay[row].protocol.c_str());
-        MainForm::cellDataRay[row].pTableItem[PROTOCOL]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[SECURITY]->
-                setText(MainForm::cellDataRay[row].security.c_str());
-        MainForm::cellDataRay[row].pTableItem[SECURITY]->setTextAlignment(Qt::AlignCenter);
-        if (MainForm::cellDataRay[row].security.empty()) stats_.totalOpen++;
-        MainForm::cellDataRay[row].pTableItem[PRIVACY]->
-                setText((MainForm::cellDataRay[row].privacy).c_str());
-        MainForm::cellDataRay[row].pTableItem[PRIVACY]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[CIPHER]->
-                setText((MainForm::cellDataRay[row].cipher).c_str());
-        MainForm::cellDataRay[row].pTableItem[CIPHER]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[FREQUENCY]->
-                setText(MainForm::cellDataRay[row].frequency.c_str());
-        MainForm::cellDataRay[row].pTableItem[FREQUENCY]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[QUALITY]->
-                setData(MainForm::cellDataRay[row].quality, Qt::DisplayRole);
-        MainForm::cellDataRay[row].pTableItem[QUALITY]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[SIGNAL]->
-                setData(MainForm::cellDataRay[row].signal, Qt::DisplayRole);
-        MainForm::cellDataRay[row].pTableItem[SIGNAL]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[LOAD]->
-                setData((MainForm::cellDataRay[row].load < 0) ? QVariant("-") : QVariant(MainForm::cellDataRay[row].load),
+        cellDataRay_[row].pTableItem[CHANNEL]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[MODE]->
+                setText(cellDataRay_[row].mode.c_str());
+        cellDataRay_[row].pTableItem[MODE]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[PROTOCOL]->
+                setText(cellDataRay_[row].protocol.c_str());
+        cellDataRay_[row].pTableItem[PROTOCOL]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[SECURITY]->
+                setText(cellDataRay_[row].security.c_str());
+        cellDataRay_[row].pTableItem[SECURITY]->setTextAlignment(Qt::AlignCenter);
+        if (cellDataRay_[row].security.empty()) stats_.totalOpen++;
+        cellDataRay_[row].pTableItem[PRIVACY]->
+                setText((cellDataRay_[row].privacy).c_str());
+        cellDataRay_[row].pTableItem[PRIVACY]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[CIPHER]->
+                setText((cellDataRay_[row].cipher).c_str());
+        cellDataRay_[row].pTableItem[CIPHER]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[FREQUENCY]->
+                setText(cellDataRay_[row].frequency.c_str());
+        cellDataRay_[row].pTableItem[FREQUENCY]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[QUALITY]->
+                setData(cellDataRay_[row].quality, Qt::DisplayRole);
+        cellDataRay_[row].pTableItem[QUALITY]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[SIGNAL]->
+                setData(cellDataRay_[row].signal, Qt::DisplayRole);
+        cellDataRay_[row].pTableItem[SIGNAL]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[LOAD]->
+                setData((cellDataRay_[row].load < 0) ? QVariant("-") : QVariant(cellDataRay_[row].load),
                         Qt::DisplayRole);
-        MainForm::cellDataRay[row].pTableItem[LOAD]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[STATION_COUNT]->
-                setData((MainForm::cellDataRay[row].stationCount < 0) ? QVariant("-") : QVariant(MainForm::cellDataRay[row].stationCount),
+        cellDataRay_[row].pTableItem[LOAD]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[STATION_COUNT]->
+                setData((cellDataRay_[row].stationCount < 0) ? QVariant("-") : QVariant(cellDataRay_[row].stationCount),
                         Qt::DisplayRole);
-        MainForm::cellDataRay[row].pTableItem[STATION_COUNT]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[BW]->
-                setData(MainForm::cellDataRay[row].BW, Qt::DisplayRole);
-        MainForm::cellDataRay[row].pTableItem[BW]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[MINSIGNAL]->
-                setData(MainForm::cellDataRay[row].minSignal, Qt::DisplayRole);
-        MainForm::cellDataRay[row].pTableItem[MINSIGNAL]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[MAXSIGNAL]->
-                setData(MainForm::cellDataRay[row].maxSignal, Qt::DisplayRole);
-        MainForm::cellDataRay[row].pTableItem[MAXSIGNAL]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[CENCHAN]->
-                setData(MainForm::cellDataRay[row].cenChan, Qt::DisplayRole);
-        MainForm::cellDataRay[row].pTableItem[CENCHAN]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[FIRST_SEEN]->
-                setText(QDateTime::fromTime_t(MainForm::cellDataRay[row].firstSeen).toString("MM/dd-hh:mm:ss"));
-        MainForm::cellDataRay[row].pTableItem[FIRST_SEEN]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[LAST_SEEN]->
-                setText(QDateTime::fromTime_t(MainForm::cellDataRay[row].lastSeen).toString("MM/dd-hh:mm:ss"));
-        MainForm::cellDataRay[row].pTableItem[LAST_SEEN]->setTextAlignment(Qt::AlignCenter);
-        MainForm::cellDataRay[row].pTableItem[VENDOR]->
-                setText(MainForm::cellDataRay[row].vendor.c_str());
+        cellDataRay_[row].pTableItem[STATION_COUNT]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[BW]->
+                setData(cellDataRay_[row].BW, Qt::DisplayRole);
+        cellDataRay_[row].pTableItem[BW]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[MINSIGNAL]->
+                setData(cellDataRay_[row].minSignal, Qt::DisplayRole);
+        cellDataRay_[row].pTableItem[MINSIGNAL]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[MAXSIGNAL]->
+                setData(cellDataRay_[row].maxSignal, Qt::DisplayRole);
+        cellDataRay_[row].pTableItem[MAXSIGNAL]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[CENCHAN]->
+                setData(cellDataRay_[row].cenChan, Qt::DisplayRole);
+        cellDataRay_[row].pTableItem[CENCHAN]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[FIRST_SEEN]->
+                setText(QDateTime::fromTime_t(cellDataRay_[row].firstSeen).toString("MM/dd-hh:mm:ss"));
+        cellDataRay_[row].pTableItem[FIRST_SEEN]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[LAST_SEEN]->
+                setText(QDateTime::fromTime_t(cellDataRay_[row].lastSeen).toString("MM/dd-hh:mm:ss"));
+        cellDataRay_[row].pTableItem[LAST_SEEN]->setTextAlignment(Qt::AlignCenter);
+        cellDataRay_[row].pTableItem[VENDOR]->
+                setText(cellDataRay_[row].vendor.c_str());
     }
     setVisibleCols();
     MainForm::mainFormWidget.mainTableView->setSortingEnabled(true);
@@ -725,8 +718,8 @@ void MainForm::drawChan5Plot() {
 void MainForm::drawTimePlot() {
 
     MainForm::mainFormWidget.timePlot->setAxisScale(QwtPlot::xBottom,
-            MainForm::blockSampleTime - TIME_PLOT_SCALE,
-            MainForm::blockSampleTime, 10);
+            blockSampleTime_ - TIME_PLOT_SCALE,
+            blockSampleTime_, 10);
     MainForm::mainFormWidget.timePlot->setAxisMaxMinor(QwtPlot::xBottom, 5);
     MainForm::mainFormWidget.timePlot->replot();
 }
@@ -734,67 +727,67 @@ void MainForm::drawTimePlot() {
 void MainForm::fillPlots() {
     // rescale the time plot
     MainForm::mainFormWidget.timePlot->setAxisScale(QwtPlot::xBottom,
-            MainForm::blockSampleTime - TIME_PLOT_SCALE,
-            MainForm::blockSampleTime, 10);
-    for (int tbi = 0; tbi <= maxTableIndex; tbi++) {
+            blockSampleTime_ - TIME_PLOT_SCALE,
+            blockSampleTime_, 10);
+    for (int tbi = 0; tbi <= maxTableIndex_; tbi++) {
         // first attach plots plots we couldn't before because of sparse data
-        auto markerSymbol = const_cast<QwtSymbol *>(MainForm::cellDataRay[tbi].pCntlChanPlot->symbol());
+        auto markerSymbol = const_cast<QwtSymbol *>(cellDataRay_[tbi].pCntlChanPlot->symbol());
         if (shouldBePlot(tbi)) {
-            markerSymbol->setStyle(MainForm::cellDataRay[tbi].BW >= 40 ? QwtSymbol::Diamond : QwtSymbol::Triangle);
+            markerSymbol->setStyle(cellDataRay_[tbi].BW >= 40 ? QwtSymbol::Diamond : QwtSymbol::Triangle);
 
-            if (this->plotShowLabel_) {
-                QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi].essid);
-                markerLabel.setColor(MainForm::cellDataRay[tbi].color);
+            if (plotShowLabel_) {
+                QwtText markerLabel = QString::fromStdString(cellDataRay_[tbi].essid);
+                markerLabel.setColor(cellDataRay_[tbi].color);
                 int ub = static_cast<int>(MainForm::mainFormWidget.timePlot->axisScaleDiv(QwtPlot::yLeft).upperBound());
-                if (MainForm::cellDataRay[tbi].signal <= ub - 5)
-                    MainForm::cellDataRay[tbi].pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignTop);
-                else MainForm::cellDataRay[tbi].pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignBottom);
-                MainForm::cellDataRay[tbi].pCntlChanPlot->setLabel(markerLabel);
+                if (cellDataRay_[tbi].signal <= ub - 5)
+                    cellDataRay_[tbi].pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignTop);
+                else cellDataRay_[tbi].pCntlChanPlot->setLabelAlignment(Qt::AlignCenter | Qt::AlignBottom);
+                cellDataRay_[tbi].pCntlChanPlot->setLabel(markerLabel);
             } else {
-                MainForm::cellDataRay[tbi].pCntlChanPlot->setLabel(QwtText(""));
+                cellDataRay_[tbi].pCntlChanPlot->setLabel(QwtText(""));
             }
 
-            if (MainForm::cellDataRay[tbi].firstPlot) {
+            if (cellDataRay_[tbi].firstPlot) {
                 resolveMesh(tbi);
-                if (MainForm::cellDataRay[tbi].frequency.substr(0, 1) == "2") {
-                    MainForm::cellDataRay[tbi].pBandCurve->attach(MainForm::mainFormWidget.chan24Plot);
-                    MainForm::cellDataRay[tbi].pCntlChanPlot->attach(MainForm::mainFormWidget.chan24Plot);
+                if (cellDataRay_[tbi].frequency.substr(0, 1) == "2") {
+                    cellDataRay_[tbi].pBandCurve->attach(MainForm::mainFormWidget.chan24Plot);
+                    cellDataRay_[tbi].pCntlChanPlot->attach(MainForm::mainFormWidget.chan24Plot);
                 } else {
-                    MainForm::cellDataRay[tbi].pBandCurve->attach(MainForm::mainFormWidget.chan5Plot);
-                    MainForm::cellDataRay[tbi].pCntlChanPlot->attach(MainForm::mainFormWidget.chan5Plot);
+                    cellDataRay_[tbi].pBandCurve->attach(MainForm::mainFormWidget.chan5Plot);
+                    cellDataRay_[tbi].pCntlChanPlot->attach(MainForm::mainFormWidget.chan5Plot);
                 }
-                MainForm::cellDataRay[tbi].pSignalTimeMarker->attach(MainForm::mainFormWidget.timePlot);
-                MainForm::cellDataRay[tbi].firstPlot = false;
+                cellDataRay_[tbi].pSignalTimeMarker->attach(MainForm::mainFormWidget.timePlot);
+                cellDataRay_[tbi].firstPlot = false;
             }
         } else {
             markerSymbol->setStyle(QwtSymbol::NoSymbol);
-            MainForm::cellDataRay[tbi].pCntlChanPlot->setLabel(QwtText(""));
+            cellDataRay_[tbi].pCntlChanPlot->setLabel(QwtText(""));
         }
         
         // then the 2.5GHz and 5GHz channel vs signal plots
-        float spread = MainForm::cellDataRay[tbi].BW / 10.0;
-        MainForm::cellDataRay[tbi].xPlot[0] = MainForm::cellDataRay[tbi].cenChan - spread;
-        MainForm::cellDataRay[tbi].xPlot[1] = MainForm::cellDataRay[tbi].cenChan - spread + 1.0;
-        MainForm::cellDataRay[tbi].xPlot[2] = MainForm::cellDataRay[tbi].cenChan + spread - 1.0;
-        MainForm::cellDataRay[tbi].xPlot[3] = MainForm::cellDataRay[tbi].cenChan + spread;
-        MainForm::cellDataRay[tbi].yPlot[0] = MainForm::cellDataRay[tbi].yPlot[3] = -100.0;
-        MainForm::cellDataRay[tbi].yPlot[1] = MainForm::cellDataRay[tbi].yPlot[2]
-                = MainForm::cellDataRay[tbi].signal;
+        float spread = cellDataRay_[tbi].BW / 10.0;
+        cellDataRay_[tbi].xPlot[0] = cellDataRay_[tbi].cenChan - spread;
+        cellDataRay_[tbi].xPlot[1] = cellDataRay_[tbi].cenChan - spread + 1.0;
+        cellDataRay_[tbi].xPlot[2] = cellDataRay_[tbi].cenChan + spread - 1.0;
+        cellDataRay_[tbi].xPlot[3] = cellDataRay_[tbi].cenChan + spread;
+        cellDataRay_[tbi].yPlot[0] = cellDataRay_[tbi].yPlot[3] = -100.0;
+        cellDataRay_[tbi].yPlot[1] = cellDataRay_[tbi].yPlot[2]
+                = cellDataRay_[tbi].signal;
         if (shouldBePlot(tbi)) {
-            MainForm::cellDataRay[tbi].pBandCurve->setRawSamples(MainForm::cellDataRay[tbi].xPlot,
-                    MainForm::cellDataRay[tbi].yPlot, 4);
+            cellDataRay_[tbi].pBandCurve->setRawSamples(cellDataRay_[tbi].xPlot,
+                    cellDataRay_[tbi].yPlot, 4);
                 // here we plot a point for the control channel
-                MainForm::cellDataRay[tbi].pCntlChanPlot->setValue( 
-                    QPointF((float) MainForm::cellDataRay[tbi].channel, 
-                    MainForm::cellDataRay[tbi].signal));
+                cellDataRay_[tbi].pCntlChanPlot->setValue( 
+                    QPointF((float) cellDataRay_[tbi].channel, 
+                    cellDataRay_[tbi].signal));
         } else {
-            MainForm::cellDataRay[tbi].pBandCurve->setSamples(0, 0, 0);
+            cellDataRay_[tbi].pBandCurve->setSamples(0, 0, 0);
         }
 
         // now the signal history plot
         int ixStart;
         int ixLength;
-        int numSamples = MainForm::cellDataRay[tbi].pHistory->totalSamples;
+        int numSamples = cellDataRay_[tbi].pHistory->totalSamples;
         if (numSamples < MAX_SAMPLES) {
             ixLength = numSamples;
             ixStart = 0;
@@ -803,24 +796,24 @@ void MainForm::fillPlots() {
             ixStart = numSamples % MAX_SAMPLES;
         }
         if (shouldBePlot(tbi)) {
-            MainForm::cellDataRay[tbi].pTimeCurve->setRawSamples(
-                    &(MainForm::cellDataRay[tbi].pHistory->sampleSec[ixStart]),
-                    &(MainForm::cellDataRay[tbi].pHistory->signal[ixStart]), ixLength);
+            cellDataRay_[tbi].pTimeCurve->setRawSamples(
+                    &(cellDataRay_[tbi].pHistory->sampleSec[ixStart]),
+                    &(cellDataRay_[tbi].pHistory->signal[ixStart]), ixLength);
             // Place the marker where the latest data point show up
-            MainForm::cellDataRay[tbi].pSignalTimeMarker->setValue( 
-                QPointF((float)MainForm::cellDataRay[tbi].pHistory->sampleSec[ixStart+ixLength-1],
-                MainForm::cellDataRay[tbi].signal));
-            if (this->plotShowLabel_) {
-                QwtText markerLabel = QString::fromStdString(MainForm::cellDataRay[tbi].essid);
-                markerLabel.setColor(MainForm::cellDataRay[tbi].color);
-                MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabelAlignment(Qt::AlignLeft | Qt::AlignTop);
-                MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabel(markerLabel);
+            cellDataRay_[tbi].pSignalTimeMarker->setValue( 
+                QPointF((float)cellDataRay_[tbi].pHistory->sampleSec[ixStart+ixLength-1],
+                cellDataRay_[tbi].signal));
+            if (plotShowLabel_) {
+                QwtText markerLabel = QString::fromStdString(cellDataRay_[tbi].essid);
+                markerLabel.setColor(cellDataRay_[tbi].color);
+                cellDataRay_[tbi].pSignalTimeMarker->setLabelAlignment(Qt::AlignLeft | Qt::AlignTop);
+                cellDataRay_[tbi].pSignalTimeMarker->setLabel(markerLabel);
             } else {
-                MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabel(QwtText(""));
+                cellDataRay_[tbi].pSignalTimeMarker->setLabel(QwtText(""));
             }
         } else {
-            MainForm::cellDataRay[tbi].pTimeCurve->setSamples(0, 0, 0);
-            MainForm::cellDataRay[tbi].pSignalTimeMarker->setLabel(QwtText(""));
+            cellDataRay_[tbi].pTimeCurve->setSamples(0, 0, 0);
+            cellDataRay_[tbi].pSignalTimeMarker->setLabel(QwtText(""));
         }
     }
     MainForm::mainFormWidget.chan24Plot->replot();
@@ -830,30 +823,30 @@ void MainForm::fillPlots() {
 
 bool MainForm::shouldBePlot(int tbi)
 {
-    if (MainForm::cellDataRay[tbi].pTableItem[PLOT]->checkState() == Qt::Checked &&
+    if (cellDataRay_[tbi].pTableItem[PLOT]->checkState() == Qt::Checked &&
         !proxyModel_->isFiltered(tbi)) // @TODO: Add a pref to allow plotting filtered table row
         return true;
     return false;
 }
 
 void MainForm::resolveMesh(int tbi) {
-    string search24 = MainForm::cellDataRay[tbi].macAddr.substr(9);
-    if (MainForm::cellDataRay[tbi].essid == "<hidden>") {
-        for (int tbi2 = 0; tbi2 <= MainForm::maxTableIndex; tbi2++) {
-            if (MainForm::cellDataRay[tbi2].macAddr.substr(9) == search24 &&
-                    MainForm::cellDataRay[tbi2].essid != "<hidden>" &&
-                    MainForm::cellDataRay[tbi2].essid.substr(0,6) != "<mesh ") {
-                MainForm::cellDataRay[tbi].essid = "<mesh " + 
-                MainForm::cellDataRay[tbi2].essid + ">";
+    string search24 = cellDataRay_[tbi].macAddr.substr(9);
+    if (cellDataRay_[tbi].essid == "<hidden>") {
+        for (int tbi2 = 0; tbi2 <= maxTableIndex_; tbi2++) {
+            if (cellDataRay_[tbi2].macAddr.substr(9) == search24 &&
+                    cellDataRay_[tbi2].essid != "<hidden>" &&
+                    cellDataRay_[tbi2].essid.substr(0,6) != "<mesh ") {
+                cellDataRay_[tbi].essid = "<mesh " + 
+                cellDataRay_[tbi2].essid + ">";
                 break;
             }
         }
     } else { // essid is not "<hidden>", so search for hiddens to resolve
-        for (int tbi2 = 0; tbi2 <= MainForm::maxTableIndex; tbi2++) {
-            if (MainForm::cellDataRay[tbi2].essid == "<hidden>" &&
-                    MainForm::cellDataRay[tbi2].macAddr.substr(9) == search24) {
-                MainForm::cellDataRay[tbi2].essid = "<mesh " + 
-                MainForm::cellDataRay[tbi].essid + ">";
+        for (int tbi2 = 0; tbi2 <= maxTableIndex_; tbi2++) {
+            if (cellDataRay_[tbi2].essid == "<hidden>" &&
+                    cellDataRay_[tbi2].macAddr.substr(9) == search24) {
+                cellDataRay_[tbi2].essid = "<mesh " + 
+                cellDataRay_[tbi].essid + ">";
             }
         }
     }
@@ -861,44 +854,44 @@ void MainForm::resolveMesh(int tbi) {
 
 void MainForm::initNewCell(string macAddress, int tbi) {
     // Initialize a newly found cell.
-    MainForm::cellDataRay.push_back(CellData());
-    MainForm::cellDataRay[tbi].macAddr = macAddress; // insert MAC address
-    MainForm::cellDataRay[tbi].essid = "<hidden>"; // nl80211 iw doesn't report SSID line if hidden
-    MainForm::cellDataRay[tbi].minSignal = 0;
-    MainForm::cellDataRay[tbi].maxSignal = -120;
-    MainForm::cellDataRay[tbi].firstSeen = now;
-    MainForm::cellDataRay[tbi].firstPlot = true;
-    MainForm::cellDataRay[tbi].protocol = "unknown";
-    MainForm::cellDataRay[tbi].vendor = vendorDb_->lookup(macAddress);
-    MainForm::cellDataRay[tbi].pHistory = make_unique<History>(); // give it a history
-    MainForm::cellDataRay[tbi].pTimeCurve = make_unique<QwtPlotCurve>(""); // and a history curve
+    cellDataRay_.push_back(CellData());
+    cellDataRay_[tbi].macAddr = macAddress; // insert MAC address
+    cellDataRay_[tbi].essid = "<hidden>"; // nl80211 iw doesn't report SSID line if hidden
+    cellDataRay_[tbi].minSignal = 0;
+    cellDataRay_[tbi].maxSignal = -120;
+    cellDataRay_[tbi].firstSeen = now_;
+    cellDataRay_[tbi].firstPlot = true;
+    cellDataRay_[tbi].protocol = "unknown";
+    cellDataRay_[tbi].vendor = vendorDb_->lookup(macAddress);
+    cellDataRay_[tbi].pHistory = make_unique<History>(); // give it a history
+    cellDataRay_[tbi].pTimeCurve = make_unique<QwtPlotCurve>(""); // and a history curve
     QColor tempColor = qColorArray[tbi % NUMBER_OF_COLORS];
-    MainForm::cellDataRay[tbi].color = tempColor; // assign a color from the palette
-    MainForm::cellDataRay[tbi].pTimeCurve->setPen(QPen(tempColor, 3.0));
-    MainForm::cellDataRay[tbi].pTimeCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
-    MainForm::cellDataRay[tbi].pTimeCurve->attach(MainForm::mainFormWidget.timePlot);
-    MainForm::cellDataRay[tbi].pBandCurve = make_unique<QwtPlotCurve>("");
-    MainForm::cellDataRay[tbi].pBandCurve->setPen(QPen(MainForm::cellDataRay[tbi].color, 3.0));
-    MainForm::cellDataRay[tbi].pBandCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
-    MainForm::cellDataRay[tbi].pCntlChanPlot = make_unique<QwtPlotMarker>(); // create plot for control channel symbol
+    cellDataRay_[tbi].color = tempColor; // assign a color from the palette
+    cellDataRay_[tbi].pTimeCurve->setPen(QPen(tempColor, 3.0));
+    cellDataRay_[tbi].pTimeCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
+    cellDataRay_[tbi].pTimeCurve->attach(MainForm::mainFormWidget.timePlot);
+    cellDataRay_[tbi].pBandCurve = make_unique<QwtPlotCurve>("");
+    cellDataRay_[tbi].pBandCurve->setPen(QPen(cellDataRay_[tbi].color, 3.0));
+    cellDataRay_[tbi].pBandCurve->setRenderHint(QwtPlotItem::RenderAntialiased);
+    cellDataRay_[tbi].pCntlChanPlot = make_unique<QwtPlotMarker>(); // create plot for control channel symbol
     // @NOTE: symbol is owned and freed by QwtPlotMarker
     auto markerSymbol = new QwtSymbol(QwtSymbol::Diamond);
     markerSymbol->setColor(tempColor);
     markerSymbol->setSize(10, 10);
-    MainForm::cellDataRay[tbi].pCntlChanPlot->setSymbol(markerSymbol);
-    MainForm::cellDataRay[tbi].pSignalTimeMarker = make_unique<QwtPlotMarker>();
+    cellDataRay_[tbi].pCntlChanPlot->setSymbol(markerSymbol);
+    cellDataRay_[tbi].pSignalTimeMarker = make_unique<QwtPlotMarker>();
     // attaching plot curve waits 'till know frequency
     model_->setRowCount(tbi + 1);
     for (int ix = 0; ix < MAX_TABLE_COLS; ix++) {
-        MainForm::cellDataRay[tbi].pTableItem[ix] = make_unique<QStandardItem>(); // Give it a table item for each column
+        cellDataRay_[tbi].pTableItem[ix] = make_unique<QStandardItem>(); // Give it a table item for each column
         model_->setItem(tbi, ix,
-                MainForm::cellDataRay[tbi].pTableItem[ix].get()); // Give it a spot in the table
+                cellDataRay_[tbi].pTableItem[ix].get()); // Give it a spot in the table
     }
-    MainForm::cellDataRay[tbi].pTableItem[PLOT]->setFlags(
+    cellDataRay_[tbi].pTableItem[PLOT]->setFlags(
             Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemNeverHasChildren);
-    MainForm::cellDataRay[tbi].pTableItem[PLOT]->setCheckState(Qt::Checked);
-    MainForm::cellDataRay[tbi].pTableItem[PLOT]->setText("");
-    MainForm::cellDataRay[tbi].pTableItem[SSID]->setForeground(QBrush(MainForm::cellDataRay[tbi].color));
+    cellDataRay_[tbi].pTableItem[PLOT]->setCheckState(Qt::Checked);
+    cellDataRay_[tbi].pTableItem[PLOT]->setText("");
+    cellDataRay_[tbi].pTableItem[SSID]->setForeground(QBrush(cellDataRay_[tbi].color));
 }
 
 void MainForm::extractData(string tl, int &tbi, int &newBSS) {
@@ -912,118 +905,118 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
         //        boost::regex(".+?((?:[A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}).*"), "$1");
         for (unsigned int ic=0; ic< macAddress.length(); ic++)
             macAddress[ic] = toupper(macAddress[ic]);
-        tbi = MainForm::maxTableIndex + 1;
-        for (int ix = 0; ix <= MainForm::maxTableIndex; ix++) {
-            if (macAddress == MainForm::cellDataRay[ix].macAddr) {
+        tbi = maxTableIndex_ + 1;
+        for (int ix = 0; ix <= maxTableIndex_; ix++) {
+            if (macAddress == cellDataRay_[ix].macAddr) {
                 tbi = ix;
                 newBSS = 0; // Have seen this BSS before
                 break;
             }
         }
-        if (MainForm::maxTableIndex < tbi) {
+        if (maxTableIndex_ < tbi) {
             // at this point we have found a **new** mac address. Initialize accordingly.
             MainForm::initNewCell(macAddress, tbi);
-            MainForm::maxTableIndex = tbi;
+            maxTableIndex_ = tbi;
             newBSS = 1; // Flag first time through for new BSS
         }
-        MainForm::cellDataRay[tbi].timesSeen++;
-        MainForm::cellDataRay[tbi].lastSeen = now;
-        MainForm::cellDataRay[tbi].BW = 20; // all have at least 20 MHz bandwidth
-        MainForm::cellDataRay[tbi].protocol = "";
+        cellDataRay_[tbi].timesSeen++;
+        cellDataRay_[tbi].lastSeen = now_;
+        cellDataRay_[tbi].BW = 20; // all have at least 20 MHz bandwidth
+        cellDataRay_[tbi].protocol = "";
     } else if (boost::regex_match(tl, sm, boost::regex("^.+?SSID: +(.*)"))) {
         string tempSSID = sm[1];
-        MainForm::cellDataRay[tbi].essid = !tempSSID.empty() ? tempSSID : "<hidden>";
+        cellDataRay_[tbi].essid = !tempSSID.empty() ? tempSSID : "<hidden>";
     } else if (boost::regex_match(tl, sm, boost::regex(
             "^[ \\t]+Supported rates: (.*)", boost::regex_constants::icase))) { // protocol
         string tempStr = sm[1];
-        if (Utils::MinIntStr(tempStr) < 11) MainForm::cellDataRay[tbi].protocol += "b";
-        if (Utils::MaxIntStr(tempStr) >= 11) MainForm::cellDataRay[tbi].protocol += "g";
+        if (Utils::MinIntStr(tempStr) < 11) cellDataRay_[tbi].protocol += "b";
+        if (Utils::MaxIntStr(tempStr) >= 11) cellDataRay_[tbi].protocol += "g";
     }  else if (boost::regex_match(tl, sm, boost::regex(
             "^[ \\t]+HT Capabilities:", boost::regex_constants::icase))) { // protocol
         pageBlock = BT_HT_CAPABILITIES;
-        MainForm::cellDataRay[tbi].protocol += "n";
+        cellDataRay_[tbi].protocol += "n";
     }  else if (boost::regex_match(tl, sm, boost::regex(
             "^.*?VHT Capabilities:", boost::regex_constants::icase))) { // protocol
         pageBlock = BT_VHT_CAPABILITIES;
-        MainForm::cellDataRay[tbi].protocol += "ac";
+        cellDataRay_[tbi].protocol += "ac";
     } else if (boost::regex_match(tl, sm, boost::regex(".*?capability:.*?( ESS( .*|$))",
             boost::regex_constants::icase))) {
-        MainForm::cellDataRay[tbi].mode = "AP"; // http://unix.stackexchange.com/questions/63069/the-n-mode-on-iwlist-wlan0-scan
+        cellDataRay_[tbi].mode = "AP"; // http://unix.stackexchange.com/questions/63069/the-n-mode-on-iwlist-wlan0-scan
     } else if (boost::regex_match(tl, sm, boost::regex(".*?capability:.*?( IBSS( .*|$))",
             boost::regex_constants::icase))) {
-        MainForm::cellDataRay[tbi].mode = "Ad Hoc";
+        cellDataRay_[tbi].mode = "Ad Hoc";
     } else if (boost::regex_match(tl, sm,
           boost::regex("^.*?primary channel: +([0-9]+).*", boost::regex_constants::icase))) {
         string tempChan = sm[1];
-        MainForm::cellDataRay[tbi].channel = atoi(tempChan.c_str());
-        MainForm::cellDataRay[tbi].cenChan = MainForm::cellDataRay[tbi].channel;
+        cellDataRay_[tbi].channel = atoi(tempChan.c_str());
+        cellDataRay_[tbi].cenChan = cellDataRay_[tbi].channel;
     } else if (boost::regex_match(tl, sm,
           boost::regex("^.*?DS Parameter set: +(channel)?.*?([0-9]+).*", boost::regex_constants::icase))
-          && MainForm::cellDataRay[tbi].channel == 0) {
+          && cellDataRay_[tbi].channel == 0) {
         string tempChan = sm[2];
-        MainForm::cellDataRay[tbi].channel = atoi(tempChan.c_str());
-        MainForm::cellDataRay[tbi].cenChan = MainForm::cellDataRay[tbi].channel;
+        cellDataRay_[tbi].channel = atoi(tempChan.c_str());
+        cellDataRay_[tbi].cenChan = cellDataRay_[tbi].channel;
     } else if (boost::regex_match(tl, sm, boost::regex("^.*?secondary channel offset: *([^ \\t]+).*",
           boost::regex_constants::icase))) { // secondary channel offset
         string tempString = sm[1];
-        if (tempString == "above") MainForm::cellDataRay[tbi].cenChan = MainForm::cellDataRay[tbi].channel + 2;
-        else if (tempString == "below") MainForm::cellDataRay[tbi].cenChan = MainForm::cellDataRay[tbi].channel - 2;
+        if (tempString == "above") cellDataRay_[tbi].cenChan = cellDataRay_[tbi].channel + 2;
+        else if (tempString == "below") cellDataRay_[tbi].cenChan = cellDataRay_[tbi].channel - 2;
     } else if (boost::regex_match(tl, sm, 
             boost::regex("^.*?freq:.*?([0-9]+).*",
             boost::regex_constants::icase))) {
         string tempFreq = sm[1];
-        MainForm::cellDataRay[tbi].frequency = tempFreq;
+        cellDataRay_[tbi].frequency = tempFreq;
     } else if (boost::regex_match(tl, sm, boost::regex("^.*?signal:.*?([\\-0-9]+).*?dBm.*",
             boost::regex_constants::icase))) {
             string tempSig = sm[1];
-            MainForm::cellDataRay[tbi].signal = atoi(tempSig.c_str());
-            if (MainForm::cellDataRay[tbi].signal < MainForm::cellDataRay[tbi].minSignal)
-                MainForm::cellDataRay[tbi].minSignal = MainForm::cellDataRay[tbi].signal;
-            if (MainForm::cellDataRay[tbi].signal > MainForm::cellDataRay[tbi].maxSignal)
-                MainForm::cellDataRay[tbi].maxSignal = MainForm::cellDataRay[tbi].signal;
+            cellDataRay_[tbi].signal = atoi(tempSig.c_str());
+            if (cellDataRay_[tbi].signal < cellDataRay_[tbi].minSignal)
+                cellDataRay_[tbi].minSignal = cellDataRay_[tbi].signal;
+            if (cellDataRay_[tbi].signal > cellDataRay_[tbi].maxSignal)
+                cellDataRay_[tbi].maxSignal = cellDataRay_[tbi].signal;
             // add to history
-            if (MainForm::cellDataRay[tbi].timesSeen == 1) {
-                int ixTemp = MainForm::cellDataRay[tbi].pHistory->totalSamples % MAX_SAMPLES;
-                MainForm::cellDataRay[tbi].pHistory->sampleSec[ixTemp] = MainForm::blockSampleTime;
-                MainForm::cellDataRay[tbi].pHistory->sampleSec[ixTemp + MAX_SAMPLES]
-                    = MainForm::blockSampleTime;
-                MainForm::cellDataRay[tbi].pHistory->signal[ixTemp] = MainForm::cellDataRay[tbi].signal;
-                MainForm::cellDataRay[tbi].pHistory->signal[ixTemp + MAX_SAMPLES] = MainForm::cellDataRay[tbi].signal;
-                MainForm::cellDataRay[tbi].pHistory->totalSamples++;
+            if (cellDataRay_[tbi].timesSeen == 1) {
+                int ixTemp = cellDataRay_[tbi].pHistory->totalSamples % MAX_SAMPLES;
+                cellDataRay_[tbi].pHistory->sampleSec[ixTemp] = blockSampleTime_;
+                cellDataRay_[tbi].pHistory->sampleSec[ixTemp + MAX_SAMPLES]
+                    = blockSampleTime_;
+                cellDataRay_[tbi].pHistory->signal[ixTemp] = cellDataRay_[tbi].signal;
+                cellDataRay_[tbi].pHistory->signal[ixTemp + MAX_SAMPLES] = cellDataRay_[tbi].signal;
+                cellDataRay_[tbi].pHistory->totalSamples++;
             } else {
-                int ixTemp = (MainForm::cellDataRay[tbi].pHistory->totalSamples - 1) % MAX_SAMPLES;
-                MainForm::cellDataRay[tbi].pHistory->sampleSec[ixTemp] = MainForm::blockSampleTime;
-                MainForm::cellDataRay[tbi].pHistory->sampleSec[ixTemp + MAX_SAMPLES]
-                    = MainForm::blockSampleTime;
-                MainForm::cellDataRay[tbi].pHistory->signal[ixTemp] = MainForm::cellDataRay[tbi].signal;
-                MainForm::cellDataRay[tbi].pHistory->signal[ixTemp + MAX_SAMPLES] = MainForm::cellDataRay[tbi].signal;
+                int ixTemp = (cellDataRay_[tbi].pHistory->totalSamples - 1) % MAX_SAMPLES;
+                cellDataRay_[tbi].pHistory->sampleSec[ixTemp] = blockSampleTime_;
+                cellDataRay_[tbi].pHistory->sampleSec[ixTemp + MAX_SAMPLES]
+                    = blockSampleTime_;
+                cellDataRay_[tbi].pHistory->signal[ixTemp] = cellDataRay_[tbi].signal;
+                cellDataRay_[tbi].pHistory->signal[ixTemp + MAX_SAMPLES] = cellDataRay_[tbi].signal;
             }
-            if (MainForm::cellDataRay[tbi].signal <= -100) MainForm::cellDataRay[tbi].quality = 0;
-            else if(MainForm::cellDataRay[tbi].signal >= -50) MainForm::cellDataRay[tbi].quality = 100;
-            else MainForm::cellDataRay[tbi].quality = 2 * (MainForm::cellDataRay[tbi].signal + 100);
+            if (cellDataRay_[tbi].signal <= -100) cellDataRay_[tbi].quality = 0;
+            else if(cellDataRay_[tbi].signal >= -50) cellDataRay_[tbi].quality = 100;
+            else cellDataRay_[tbi].quality = 2 * (cellDataRay_[tbi].signal + 100);
     } else if (boost::regex_match(tl, sm, boost::regex(".*?Group cipher: *(.*)",
             boost::regex_constants::icase))) { // group cipher
-        MainForm::cellDataRay[tbi].privacy = sm[1];
+        cellDataRay_[tbi].privacy = sm[1];
     } else if (pageBlock == BT_HT_CAPABILITIES && boost::regex_match(tl, sm, boost::regex(".*?HT20/HT40.*",
             boost::regex_constants::icase))) { // HT Capabilities - HT20/HT40 if 40 MHz capable, actual BW is determined from HT Op
-        MainForm::cellDataRay[tbi].BW = 40;
+        cellDataRay_[tbi].BW = 40;
     } else if (pageBlock == BT_HT_OPERATION && boost::regex_match(tl, sm, boost::regex("^.*?STA channel width: (any|\\d+).*",
             boost::regex_constants::icase))) {
         string bwString = sm[1];
         if (bwString == "any") return; // Dont change, use bw derived from HT Capabilities
-        MainForm::cellDataRay[tbi].BW = atoi(bwString.c_str());
+        cellDataRay_[tbi].BW = atoi(bwString.c_str());
     } else if (pageBlock == BT_VHT_OPERATION && boost::regex_match(tl, sm, boost::regex(".*?\\* channel width:.*?([0-9]).*?([0-9]+) MHz.*",
             boost::regex_constants::icase))) { // Bandwidth VHT
         int val = atoi(string(sm[1]).c_str());
         if (val == 0) return; // 0 (20 or 40 MHz) - BW from HT operation should be used
         string bwString = sm[2];
-        MainForm::cellDataRay[tbi].BW = atoi(bwString.c_str());
+        cellDataRay_[tbi].BW = atoi(bwString.c_str());
     } else if (boost::regex_match(tl, sm, boost::regex(".*?Pairwise ciphers: *(.*)",
             boost::regex_constants::icase))) { // pairwise ciphers
-        MainForm::cellDataRay[tbi].cipher = sm[1];
+        cellDataRay_[tbi].cipher = sm[1];
     } else if (boost::regex_match(tl, sm, boost::regex(".*?Authentication suites: *(.*)",
             boost::regex_constants::icase))) { // authentication
-            MainForm::cellDataRay[tbi].security = sm[1];
+            cellDataRay_[tbi].security = sm[1];
     } else if (boost::regex_match(tl, sm, boost::regex(".*?RSN: *(.*)",
             boost::regex_constants::icase))) { pageBlock = BT_RSN;
     } else if (boost::regex_match(tl, sm, boost::regex(".*?BSS Load: *(.*)",
@@ -1033,11 +1026,11 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
             int x = atoi(string(sm[1]).c_str());
             int y = atoi(string(sm[2]).c_str());
             if (y > 0) {
-                MainForm::cellDataRay[tbi].load = (int)(x * 100 / y);
+                cellDataRay_[tbi].load = (int)(x * 100 / y);
             }
     } else if (pageBlock == BT_BSS_LOAD && boost::regex_match(tl, sm, boost::regex("^.*?station count:.*?([0-9]+).*",
             boost::regex_constants::icase))) {
-                MainForm::cellDataRay[tbi].stationCount = atoi(string(sm[1]).c_str());
+                cellDataRay_[tbi].stationCount = atoi(string(sm[1]).c_str());
     } else if (boost::regex_match(tl, sm, boost::regex("[^V]*HT operation: *(.*)",
             boost::regex_constants::icase))) { pageBlock = BT_HT_OPERATION;
     } else if (boost::regex_match(tl, sm, boost::regex(".*?Extended capabilities: *(.*)",
@@ -1062,18 +1055,18 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
 
     static fstream thePipe(pipeName);
     // reset some stuff from last pass
-    for (int ix = 0; ix <= maxTableIndex; ix++) {
-        MainForm::cellDataRay[ix].protocol = "";
-        MainForm::cellDataRay[ix].signal = -110;
-        MainForm::cellDataRay[ix].timesSeen = 0;
+    for (int ix = 0; ix <= maxTableIndex_; ix++) {
+        cellDataRay_[ix].protocol = "";
+        cellDataRay_[ix].signal = -110;
+        cellDataRay_[ix].timesSeen = 0;
     }
     // disable column sorting to prevent segfaults while we muck with the table
     MainForm::mainFormWidget.mainTableView->setSortingEnabled(false);
     string tempLine;
     bool lastLine = false;
     int block;
-    MainForm::now = time(NULL);
-    MainForm::blockSampleTime = now - MainForm::runStartTime;
+    now_ = time(NULL);
+    blockSampleTime_ = now_ - runStartTime_;
     int tableIndex = -1; // holds current index pointer into cellData
     while (!lastLine && getline(thePipe, tempLine)) {
         MainForm::extractData(tempLine, tableIndex, newBSS); // the heavy lifting here
@@ -1092,8 +1085,8 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
                 MainForm::fillTable();
                 MainForm::fillPlots();
                 MainForm::fillStatus();
-                if (MainForm::logDataState == Qt::Checked) {
-                    dataLogger_->log(MainForm::cellDataRay);
+                if (logDataState_ == Qt::Checked) {
+                    dataLogger_->log(cellDataRay_);
                 }
             }
         }
