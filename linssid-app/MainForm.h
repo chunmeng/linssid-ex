@@ -23,11 +23,12 @@
 #include "DataStruct.h"
 
 // forward declare
-class Getter;
 class DataLogger;
-class VendorDb;
+class DataReadyEvent;
+class Getter;
 class PrefsHandler;
 class prefsDialog;
+class VendorDb;
 class ViewFilterDialog;
 
 class QStandardItem;
@@ -47,8 +48,6 @@ public:
     void setInterface(int);
     int getNapTime();
     std::string getCurrentInterface();
-    static const QEvent::Type DATA_READY_EVENT;
-    class DataReadyEvent;
     int getReadyBlockNo();
     void postDataReadyEvent(const int);
     void drawTable();

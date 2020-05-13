@@ -17,9 +17,12 @@
 #include <QtWidgets>
 #include <stdio.h>
 #include "Custom.h"
+#include "CustomEvent.h"
 #include "Getter.h"
 #include "MainForm.h"
 #include "ui_MainForm.h"
+
+using namespace std;
 
 extern string pipeName;
 extern qint64 startTime;
@@ -29,13 +32,9 @@ extern string pipeName;
 // extern ofstream linssidLog;
 extern runStates runState;
 
-using namespace std;
+Getter::Getter() = default;
 
-Getter::Getter() {
-};
-
-Getter::~Getter() {
-};
+Getter::~Getter() = default;
 
 void Getter::run() {
     // do stuff here
@@ -43,23 +42,6 @@ void Getter::run() {
 }
 
 MainForm* Getter::pMainForm;
-
-const QEvent::Type Getter::DATA_WANTED_EVENT = static_cast<QEvent::Type> (DATAWANTED);
-// Define the custom event subclass
-
-class Getter::DataWantedEvent : public QEvent {
-public:
-
-    DataWantedEvent(const int customData1) :
-    QEvent(Getter::DATA_WANTED_EVENT), wantedBlockNo(customData1) {
-    }
-
-    int getWantedBlockNo() const {
-        return wantedBlockNo;
-    }
-private:
-    int wantedBlockNo;
-};
 
 void Getter::postDataWantedEvent(const int customData1) {
     // This method (postDataWantedEvent) can be called from any thread
@@ -69,7 +51,7 @@ void Getter::postDataWantedEvent(const int customData1) {
 void Getter::customEvent(QEvent * event) {
     // When we get here, we've crossed the thread boundary and are now
     // executing in the Qt object's thread
-    if (event->type() == Getter::DATA_WANTED_EVENT) {
+    if (event->type() == DataWantedEvent::Type()) {
         handleDataWantedEvent(static_cast<DataWantedEvent *> (event));
     }
     // use more else ifs to handle other custom events

@@ -38,6 +38,7 @@
 #include <pwd.h>
 #include <boost/regex.hpp>
 #include "Custom.h"
+#include "CustomEvent.h"
 #include "MainForm.h"
 #include "Getter.h"
 #include "AboutBox.h"
@@ -50,6 +51,8 @@
 #include "DataProxyModel.h"
 #include "ViewFilterDialog.h"
 #include "Logger.h"
+
+using namespace std;
 
 extern int lastBlockRequested;
 extern int lastBlockReceived;
@@ -64,8 +67,6 @@ extern string fullPrefsName;
 extern Logger AppLogger;
 
 extern string genPipeName(int);
-
-using namespace std;
 
 // define a few things
 
@@ -333,24 +334,6 @@ string MainForm::getCurrentInterface() {
     return ((mainFormWidget.interfaceCbx->currentText()).toStdString());
 }
 
-// Define the custom event identifier
-const QEvent::Type MainForm::DATA_READY_EVENT = static_cast<QEvent::Type> (DATAREADY);
-// Define the custom event subclass
-
-class MainForm::DataReadyEvent : public QEvent {
-public:
-
-    DataReadyEvent(const int customData1) :
-    QEvent(MainForm::DATA_READY_EVENT), readyBlockNo(customData1) {
-    }
-
-    int getReadyBlockNo() const {
-        return readyBlockNo;
-    }
-private:
-    int readyBlockNo;
-};
-
 int MainForm::getNapTime() {
     return MainForm::mainFormWidget.napTimeSlider->value();
 }
@@ -556,7 +539,7 @@ void MainForm::columnWidthSave(int col, int oldWidth, int newWidth) {
 void MainForm::customEvent(QEvent * event) {
     // When we get here, we've crossed the thread boundary and are now
     // executing in the Qt object's thread
-    if (event->type() == MainForm::DATA_READY_EVENT) {
+    if (event->type() == DataReadyEvent::Type()) {
         handleDataReadyEvent(static_cast<DataReadyEvent *> (event));
     }
     // use more else ifs to handle other custom events
