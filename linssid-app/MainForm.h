@@ -83,6 +83,7 @@ public slots:
     void showAboutBox();
     void showPrefsDlg();
     void showViewFilterDlg();
+    void handleFilterDialogClosed();
     void columnWidthSave(int, int, int);
     void updatePlotPrefs(QString, int, int, bool, bool);
     void logPrefChanged(int);

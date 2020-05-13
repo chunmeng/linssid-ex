@@ -8,6 +8,8 @@
 #ifndef CUSTOM_H
 #define	CUSTOM_H
 
+#include <QEvent>
+
 #define LINSSIDVERSION "3.6-ext"
 #define LINSSIDPREFSVER "3.3.1"
 #define LINSSIDDATALOGVER "2.8"
@@ -39,6 +41,5 @@ enum pageBlockType {
 enum runStates {
     STOPPED, STOPPING, RUNNING
 };
-
 
 #endif	/* CUSTOM_H */

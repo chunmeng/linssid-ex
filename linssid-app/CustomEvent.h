@@ -7,6 +7,7 @@
 enum class CustomEvent {
     DataWanted = QEvent::User + 1,
     DataReady,
+    DialogClosed,
 };
 
 // Define the custom event subclass
@@ -40,5 +41,21 @@ private:
     int readyBlockNo;
 };
 
+const int FILTER_DIALOG_ID = 1;
+
+class DialogClosedEvent : public QEvent {
+public:
+    static auto Type() { return static_cast<QEvent::Type>(CustomEvent::DialogClosed); }
+
+    DialogClosedEvent(const int id)
+        : QEvent(Type()), id_(id) {
+    }
+
+    int id() const {
+        return id_;
+    }
+private:
+    int id_;
+};
 
 #endif	/* CUSTOM_EVENT_H */
