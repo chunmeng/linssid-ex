@@ -1,4 +1,5 @@
 #include "DataLogger.h"
+#include "Utils.h"
 #include <ctime>
 #include <iostream>
 #include <unistd.h>
@@ -10,11 +11,6 @@ using namespace std;
 
 // @TODO: Should do something about these extern...
 extern struct passwd *realUser;
-
-namespace {
-
-static void waste(int) {};
-}
 
 DataLogger::DataLogger(const string& logPath)
     : logPath_(logPath)
@@ -39,7 +35,7 @@ void DataLogger::log(const CellData::Vector& data)
             std::cout << "Failed to open " << logFileName_ << " for data logging" << endl;;
             return;
         }
-        waste(chown(logFileName_.c_str(), realUser->pw_uid, realUser->pw_gid));
+        Utils::waste(chown(logFileName_.c_str(), realUser->pw_uid, realUser->pw_gid));
         chmod(logFileName_.c_str(), 00644);
         writeHeader();
     }

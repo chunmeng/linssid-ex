@@ -11,9 +11,9 @@
 #include <QThread>
 #include <QEvent>
 #include "Custom.h"
-using namespace std;
 
 class MainForm; //  forward declare
+class DataWantedEvent;
 
 class Getter : public QThread {
     Q_OBJECT
@@ -24,19 +24,11 @@ public:
     static MainForm* pMainForm; // a pointer to the instance of the MainForm that calls this Getter
 
     void run();
-
-    static const QEvent::Type DATA_WANTED_EVENT;
-
-    class DataWantedEvent;
-
     int getWantedBlockNo();
-
     void postDataWantedEvent(const int);
-    
-    inline void waste(int);
 
 protected:
-    void customEvent(QEvent *); // This overrides QObject::customEvent()
+    void customEvent(QEvent *) override;
 
 private:
     void handleDataWantedEvent(const DataWantedEvent *);

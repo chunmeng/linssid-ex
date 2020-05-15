@@ -23,11 +23,12 @@
 #include "DataStruct.h"
 
 // forward declare
-class Getter;
 class DataLogger;
-class VendorDb;
+class DataReadyEvent;
+class Getter;
 class PrefsHandler;
 class prefsDialog;
+class VendorDb;
 class ViewFilterDialog;
 
 class QStandardItem;
@@ -40,15 +41,12 @@ public:
 
     MainForm();
     virtual ~MainForm();
-    //    void run();
     void init();
     void getUserID();
     void addInterfaces();
     void setInterface(int);
     int getNapTime();
     std::string getCurrentInterface();
-    static const QEvent::Type DATA_READY_EVENT;
-    class DataReadyEvent;
     int getReadyBlockNo();
     void postDataReadyEvent(const int);
     void drawTable();
@@ -70,21 +68,11 @@ public:
 
     static Getter* pGetter; // a pointer to the instance of the Getter that calls this MainForm
     static QThread* pGetterThread; // a pointer to the getter's thread
-    static CellData::Vector cellDataRay;
-    static int maxTableIndex;
-    static long runStartTime;
-    static long blockSampleTime;
-    static long now;
-    static int logDataState;
-    static bool firstScan;
     static QFont tblFnt;
     static QString fntSizes[];
     static int numFntSizes;
     static QAction* colToQAction[MAX_TABLE_COLS];
     static int columnWidth[MAX_TABLE_COLS];
-    std::unique_ptr<QwtPlotGrid> chan24Grid;
-    std::unique_ptr<QwtPlotGrid> chan5Grid;
-    std::unique_ptr<QwtPlotGrid> timeGrid;
 
 public slots:
     void doRun();
@@ -101,8 +89,8 @@ public slots:
 
 protected:
     Ui::mainForm mainFormWidget;
-    void customEvent(QEvent*); // This overrides QObject::customEvent()
-    void closeEvent(QCloseEvent*); // Overides built-in closeEvent()
+    void customEvent(QEvent*) override;
+    void closeEvent(QCloseEvent*) override;
     void handleDataReadyEvent(const DataReadyEvent*);
 
 private:
@@ -112,18 +100,29 @@ private:
     bool shouldBePlot(int tbi);
 
 private:
-    std::unique_ptr<prefsDialog> prefsDlg;
+    std::unique_ptr<prefsDialog> prefsDlg_;
     std::unique_ptr<ViewFilterDialog> viewFilterDlg_;
 
     std::unique_ptr<DataProxyModel> proxyModel_;
     std::unique_ptr<QStandardItemModel> model_;
-    std::unique_ptr<DataLogger> dataLogger;
-    std::unique_ptr<VendorDb> vendorDb;
-    std::unique_ptr<PrefsHandler> prefsHandler;
-    std::unique_ptr<QLabel> statusCounts;
-    Stats stats;
+    std::unique_ptr<DataLogger> dataLogger_;
+    std::unique_ptr<VendorDb> vendorDb_;
+    std::unique_ptr<PrefsHandler> prefsHandler_;
+    std::unique_ptr<QLabel> statusCounts_;
+    std::unique_ptr<QwtPlotGrid> chan24Grid_;
+    std::unique_ptr<QwtPlotGrid> chan5Grid_;
+    std::unique_ptr<QwtPlotGrid> timeGrid_;
+    Stats stats_;
 
-    bool plotShowLabel = true;
+    // Internal states variables
+    int logDataState_;
+    bool plotShowLabel_ = true;
+    bool firstScan_ = false;
+    long runStartTime_;
+    long blockSampleTime_; // time of the block relative to runStartTime
+    long now_; // absolute time of the block
+    CellData::Vector cellDataRay_; // The data table
+    int maxTableIndex_; // holds the highest index pointer into cellData
 };
 
 #endif	/* _MAINFORM_H */
