@@ -26,6 +26,7 @@ private:
     void initUiStates(const FilterState& opt);
     void checkboxChanged(bool enabled, bool& filterState, QLineEdit& bindedLineEdit);
     void textChanged(const std::string& tag, std::string& filterText, const std::string& lineEditText);
+    virtual void closeEvent(QCloseEvent *e) final;
 
 private:
     Ui::ViewFilterDialog widget;

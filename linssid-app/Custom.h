@@ -40,5 +40,4 @@ enum runStates {
     STOPPED, STOPPING, RUNNING
 };
 
-
 #endif	/* CUSTOM_H */

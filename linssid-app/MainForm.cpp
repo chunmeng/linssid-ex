@@ -120,7 +120,10 @@ MainForm::MainForm() {
     connect(mainFormWidget.runBtn, SIGNAL(clicked()), this, SLOT(doRun()));
     connect(mainFormWidget.allBtn, SIGNAL(clicked()), this, SLOT(doPlotAll()));
     connect(mainFormWidget.noneBtn, SIGNAL(clicked()), this, SLOT(doPlotNone()));
-    connect(mainFormWidget.filterBtn, SIGNAL(clicked()), this, SLOT(showViewFilterDlg()));
+    connect(mainFormWidget.filterBtn, &QPushButton::clicked, [this]() {
+            mainFormWidget.filterBtn->setEnabled(!mainFormWidget.filterBtn->isChecked());
+            showViewFilterDlg();
+        });
     // Menu item actions
     connect(mainFormWidget.actionSSID, SIGNAL(changed()), this, SLOT(reDrawTable()));
     connect(mainFormWidget.actionMAC, SIGNAL(changed()), this, SLOT(reDrawTable()));
@@ -502,12 +505,20 @@ void MainForm::showViewFilterDlg()
         viewFilterDlg_->move(pos);
         DebugLog(AppLogger) << "Adjusting filter dialog to (" << pos.x() << ", " << pos.y()
             << "), parent is at (" << this->x() << "+" << this->width() << ", " << this->y() << "+" << this->height() << ")";
+
     }
     // Make modeless dialog that stay on top of the parent window (when it's on focus)
     // Follow this example: https://doc.qt.io/qt-5/qtwidgets-widgets-windowflags-example.html
     auto flags = viewFilterDlg_->windowFlags();
     viewFilterDlg_->setWindowFlags(flags | Qt::Tool);
     viewFilterDlg_->show();
+}
+
+void MainForm::handleFilterDialogClosed()
+{
+    mainFormWidget.filterBtn->setCheckable(true);
+    mainFormWidget.filterBtn->setChecked(false);
+    mainFormWidget.filterBtn->setEnabled(true);
 }
 
 void MainForm::columnWidthSave(int col, int oldWidth, int newWidth) {
@@ -520,6 +531,12 @@ void MainForm::customEvent(QEvent * event) {
     // executing in the Qt object's thread
     if (event->type() == DataReadyEvent::Type()) {
         handleDataReadyEvent(static_cast<DataReadyEvent *> (event));
+    } else if (event->type() == DialogClosedEvent::Type()) {
+        auto e = static_cast<DialogClosedEvent *> (event);
+        if (e->id() == FILTER_DIALOG_ID) {
+            DebugLog(AppLogger) << "Event FilterDialogClosed received";
+            handleFilterDialogClosed();
+        }
     }
     // use more else ifs to handle other custom events
 }
@@ -600,7 +617,7 @@ void MainForm::setVisibleCols() {
 void MainForm::fillTable() {
     stats_.reset();
     mainFormWidget.mainTableView->setFont(tblFnt);
-    
+
     // fill in the x-y, also set each cell text alignment
     model_->setRowCount(maxTableIndex_ + 1);
     for (int row = 0; row <= maxTableIndex_; row++) {
@@ -763,7 +780,7 @@ void MainForm::fillPlots() {
             markerSymbol->setStyle(QwtSymbol::NoSymbol);
             cellDataRay_[tbi].pCntlChanPlot->setLabel(QwtText(""));
         }
-        
+
         // then the 2.5GHz and 5GHz channel vs signal plots
         float spread = cellDataRay_[tbi].BW / 10.0;
         cellDataRay_[tbi].xPlot[0] = cellDataRay_[tbi].cenChan - spread;
@@ -777,8 +794,8 @@ void MainForm::fillPlots() {
             cellDataRay_[tbi].pBandCurve->setRawSamples(cellDataRay_[tbi].xPlot,
                     cellDataRay_[tbi].yPlot, 4);
                 // here we plot a point for the control channel
-                cellDataRay_[tbi].pCntlChanPlot->setValue( 
-                    QPointF((float) cellDataRay_[tbi].channel, 
+                cellDataRay_[tbi].pCntlChanPlot->setValue(
+                    QPointF((float) cellDataRay_[tbi].channel,
                     cellDataRay_[tbi].signal));
         } else {
             cellDataRay_[tbi].pBandCurve->setSamples(0, 0, 0);
@@ -800,7 +817,7 @@ void MainForm::fillPlots() {
                     &(cellDataRay_[tbi].pHistory->sampleSec[ixStart]),
                     &(cellDataRay_[tbi].pHistory->signal[ixStart]), ixLength);
             // Place the marker where the latest data point show up
-            cellDataRay_[tbi].pSignalTimeMarker->setValue( 
+            cellDataRay_[tbi].pSignalTimeMarker->setValue(
                 QPointF((float)cellDataRay_[tbi].pHistory->sampleSec[ixStart+ixLength-1],
                 cellDataRay_[tbi].signal));
             if (plotShowLabel_) {
@@ -836,7 +853,7 @@ void MainForm::resolveMesh(int tbi) {
             if (cellDataRay_[tbi2].macAddr.substr(9) == search24 &&
                     cellDataRay_[tbi2].essid != "<hidden>" &&
                     cellDataRay_[tbi2].essid.substr(0,6) != "<mesh ") {
-                cellDataRay_[tbi].essid = "<mesh " + 
+                cellDataRay_[tbi].essid = "<mesh " +
                 cellDataRay_[tbi2].essid + ">";
                 break;
             }
@@ -845,7 +862,7 @@ void MainForm::resolveMesh(int tbi) {
         for (int tbi2 = 0; tbi2 <= maxTableIndex_; tbi2++) {
             if (cellDataRay_[tbi2].essid == "<hidden>" &&
                     cellDataRay_[tbi2].macAddr.substr(9) == search24) {
-                cellDataRay_[tbi2].essid = "<mesh " + 
+                cellDataRay_[tbi2].essid = "<mesh " +
                 cellDataRay_[tbi].essid + ">";
             }
         }
@@ -961,7 +978,7 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
         string tempString = sm[1];
         if (tempString == "above") cellDataRay_[tbi].cenChan = cellDataRay_[tbi].channel + 2;
         else if (tempString == "below") cellDataRay_[tbi].cenChan = cellDataRay_[tbi].channel - 2;
-    } else if (boost::regex_match(tl, sm, 
+    } else if (boost::regex_match(tl, sm,
             boost::regex("^.*?freq:.*?([0-9]+).*",
             boost::regex_constants::icase))) {
         string tempFreq = sm[1];
@@ -1074,7 +1091,7 @@ void MainForm::handleDataReadyEvent(const DataReadyEvent * /*event*/) {
         if (lastLine) {
             block = atoi(tempLine.substr(endBlockString.length() + 1, std::string::npos).c_str());
             if (block >= 0) lastBlockReceived = block;
-            if ( mainFormWidget.runBtn->isChecked()) {
+            if (mainFormWidget.runBtn->isChecked()) {
                 runState = RUNNING;
                 if (block >= 0) lastBlockRequested++;
             } else {

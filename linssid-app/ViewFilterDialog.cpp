@@ -4,6 +4,7 @@
  */
 
 #include "ViewFilterDialog.h"
+#include "CustomEvent.h"
 #include "Logger.h"
 
 using namespace std;
@@ -92,4 +93,13 @@ void ViewFilterDialog::textChanged(const string& tag, string& filterText, const 
     DebugLog(AppLogger) << tag << " filter changed: " << lineEditText;
     filterText = lineEditText;
     emit filterUpdated(options_);
+}
+
+void ViewFilterDialog::closeEvent(QCloseEvent *e)
+{
+    (void)e;
+    if (this->parent()) {// parent can be null
+        DebugLog(AppLogger) << "ViewFilterDialog closed, tell parent";
+        QApplication::postEvent(this->parent(), new DialogClosedEvent(FILTER_DIALOG_ID));
+    }
 }
