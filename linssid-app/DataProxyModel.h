@@ -35,6 +35,7 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role) const;
     bool isFiltered(int sourceRow) const;
+    const FilterState& getFilter();
 
 public slots:
     void setFilter(const FilterState& state);

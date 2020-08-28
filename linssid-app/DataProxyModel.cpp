@@ -45,6 +45,7 @@ public:
     bool acceptMac(const string &mac) const;
 
 public:
+    // The Proxy owns the real filter options
     FilterState state;
     vector<pair<int, int>> channelBuckets;
 };
@@ -135,6 +136,11 @@ void DataProxyModel::setFilter(const FilterState& state)
         impl_->updateChannelBuckets(state.channels);
     impl_->state = state; // copy whole
     invalidateFilter();
+}
+
+const FilterState& DataProxyModel::getFilter()
+{
+    return impl_->state;
 }
 
 // \return false to filter out row after checking criteria

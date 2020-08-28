@@ -499,7 +499,7 @@ void MainForm::showPrefsDlg() {
 void MainForm::showViewFilterDlg()
 {
     if (viewFilterDlg_ == nullptr) {
-        viewFilterDlg_ = make_unique<ViewFilterDialog>(this, (QObject*)this->proxyModel_.get());
+        viewFilterDlg_ = make_unique<ViewFilterDialog>(this, (QObject*)this->proxyModel_.get(), this->proxyModel_->getFilter());
         // First time - adjust position relative to MainForm
         QPoint pos(this->x() + this->width() - viewFilterDlg_->width(), this->y() + 200);
         viewFilterDlg_->move(pos);

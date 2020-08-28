@@ -10,8 +10,9 @@
 using namespace std;
 extern Logger AppLogger;
 
-ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
+ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy, const FilterState& options)
     : QWidget(parent)
+    , options_(options)
 {
     widget.setupUi(this);
     // Initialize to default filter condition
@@ -39,7 +40,7 @@ ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
     connect(widget.lineEditMAC, &QLineEdit::editingFinished, [this]() {
                 textChanged("mac", options_.mac, widget.lineEditMAC->text().toStdString());
             });
-    // connect to filter model
+    // Emit updated filter options back to filter model
     connect(this, SIGNAL(filterUpdated(FilterState)), filterProxy, SLOT(setFilter(FilterState)));
 }
 
