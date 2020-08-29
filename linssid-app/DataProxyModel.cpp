@@ -2,11 +2,15 @@
 #include "Custom.h"
 #include "Logger.h"
 #include "Utils.h"
+#include <fstream>
 #include <iostream>
 #include <regex>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
+#include <sys/stat.h>
+#include <pwd.h>
+#include <unistd.h>
 
 using namespace std;
 extern Logger AppLogger;
@@ -175,12 +179,56 @@ bool DataProxyModel::isFiltered(int sourceRow) const
     return false;
 }
 
-void DataProxyModel::load(const std::string& file)
+void DataProxyModel::load(const string& file)
 {
     InfoLog(AppLogger) << "Load filters from " << file << endl;
+    fstream prefs;
+    prefs.open(file, ios::in);
+    if (!prefs.is_open()) { // no prefs file, so return default
+        InfoLog(AppLogger) << "Filter setting doesn't exist, default will be used" << endl;
+        return;
+    }
+    string line;
+    while (getline(prefs, line)) {
+        auto kv = Utils::split(line, '=');
+        if (kv.size() < 2) continue;    // Default value for key without value
+        DebugLog(AppLogger) << "Load " << kv[0] << " = " << kv[1] << endl;
+        // @TODO: Use tag dispatcher to set corresponding value
+        if (kv[0] == "filter.band") impl_->state.byBand = (kv[1] == "0") ? false : true;
+        else if (kv[0] == "filter.band.2g") impl_->state.showBand24G = (kv[1] == "0") ? false : true;
+        else if (kv[0] == "filter.band.5g") impl_->state.showBand5G = (kv[1] == "0") ? false : true;
+        else if (kv[0] == "filter.channel") impl_->state.byChannel = (kv[1] == "0") ? false : true;
+        else if (kv[0] == "filter.channel.text") impl_->state.channels = kv[1];
+        else if (kv[0] == "filter.ssid") impl_->state.bySsid = (kv[1] == "0") ? false : true;
+        else if (kv[0] == "filter.ssid.text") impl_->state.ssid = kv[1];
+        else if (kv[0] == "filter.mac") impl_->state.byMac = (kv[1] == "0") ? false : true;
+        else if (kv[0] == "filter.mac.text") impl_->state.mac = kv[1];
+    }
+    prefs.close();
 }
 
+// Simple serialization format
+// filter.band=1
+// filter.band.2g=1
+// filter.band.5g=1
+// filter.ssid=1
+// filter.ssid.text="abc"...
 void DataProxyModel::save(const std::string& file)
 {
     InfoLog(AppLogger) << "Save filters to " << file << endl;
+    extern struct passwd *realUser;
+    ofstream prefs;
+    prefs.open(file, ios::out);
+    Utils::waste(chown(file.c_str(), realUser->pw_uid, realUser->pw_gid));
+    chmod(file.c_str(), 00644);
+    prefs << "filter.band=" << impl_->state.byBand << endl;
+    prefs << "filter.band.2g=" << impl_->state.showBand24G << endl;
+    prefs << "filter.band.5g=" << impl_->state.showBand5G << endl;
+    prefs << "filter.channel=" << impl_->state.byChannel << endl;
+    prefs << "filter.channel.text=" << impl_->state.channels << endl;
+    prefs << "filter.ssid=" << impl_->state.bySsid << endl;
+    prefs << "filter.ssid.text=" << impl_->state.ssid << endl;
+    prefs << "filter.mac=" << impl_->state.byMac << endl;
+    prefs << "filter.mac.text=" << impl_->state.mac << endl;
+    prefs.close();
 }
