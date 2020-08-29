@@ -10,8 +10,9 @@
 using namespace std;
 extern Logger AppLogger;
 
-ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
+ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy, const FilterState& options)
     : QWidget(parent)
+    , options_(options)
 {
     widget.setupUi(this);
     // Initialize to default filter condition
@@ -39,7 +40,7 @@ ViewFilterDialog::ViewFilterDialog(QWidget *parent, QObject *filterProxy)
     connect(widget.lineEditMAC, &QLineEdit::editingFinished, [this]() {
                 textChanged("mac", options_.mac, widget.lineEditMAC->text().toStdString());
             });
-    // connect to filter model
+    // Emit updated filter options back to filter model
     connect(this, SIGNAL(filterUpdated(FilterState)), filterProxy, SLOT(setFilter(FilterState)));
 }
 
@@ -54,7 +55,11 @@ void ViewFilterDialog::initUiStates(const FilterState& opt)
     widget.lineEditChannel->setEnabled(opt.byChannel);
     widget.lineEditChannel->setText(QString::fromStdString(opt.channels));
     widget.checkBoxSSID->setChecked(opt.bySsid);
+    widget.lineEditSSID->setEnabled(opt.bySsid);
+    widget.lineEditSSID->setText(QString::fromStdString(opt.ssid));
     widget.checkBoxMAC->setChecked(opt.byMac);
+    widget.lineEditMAC->setEnabled(opt.byMac);
+    widget.lineEditMAC->setText(QString::fromStdString(opt.mac));
     // @FIXME: Does not behave the same as regex101 and still accept 6d number. Maybe this is over engineering, and a simple [0-9,-] would do... 
     // https://regex101.com/r/KwvbjH/3
     // v4 - ^([0-9]{1,3})([,-]+[0-9]{1,3})*([0-9]{1,3}[,])?$

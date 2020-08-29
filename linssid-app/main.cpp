@@ -37,8 +37,7 @@ bool stopping = false;
 runStates runState=STOPPED;
 int realUID;
 struct passwd *realUser;
-string fullPrefsName;
-string fullLogName;
+string storageDir;
 Logger AppLogger("App");
 
 int main(int argc, char *argv[]) {
@@ -82,9 +81,7 @@ It will not work. Try linssid-pkexec instead. Sorry. Goodbye.");
         realUID = 0;
     }
     realUser = getpwuid(realUID);
-    // @TODO: Pass by argument
-    fullPrefsName = string(realUser->pw_dir) + "/" + string(PREFS_FILE_NAME);
-    fullLogName = string(realUser->pw_dir) + "/" + string(LOG_DATA_FILE_NAME);
+    storageDir = string(realUser->pw_dir) + "/";
 
     //  create instances of the main GUI and the worker thread and initialize
     Getter getter1; // instance of Getter

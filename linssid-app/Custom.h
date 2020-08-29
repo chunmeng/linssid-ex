@@ -17,7 +17,7 @@
 #define VENDOR_FILE_NAME "/usr/share/linssid/oui.datc"
 #define PREFS_FILE_NAME ".linssid.prefs"
 #define LOG_DATA_FILE_NAME "LinSSID.datalog"
-
+#define FILTER_PREFS_FILE_NAME  ".linssid.filters"
 
 enum wlDriver {
     IOCTL, NL80211

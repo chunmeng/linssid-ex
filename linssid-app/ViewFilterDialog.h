@@ -12,7 +12,7 @@
 class ViewFilterDialog : public QWidget {
     Q_OBJECT
 public:
-    ViewFilterDialog(QWidget *parent, QObject* filterProxy);
+    ViewFilterDialog(QWidget *parent, QObject *filterProxy, const FilterState& options);
     virtual ~ViewFilterDialog();
 
 public slots:
