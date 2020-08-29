@@ -168,8 +168,7 @@ bool DataProxyModel::filterAcceptsRow(int sourceRow,
 QVariant DataProxyModel::headerData(int section, Qt::Orientation orientation,
                                 int role) const
 {
-    return sourceModel()->headerData(section, orientation,
-                                     role);
+    return sourceModel()->headerData(section, orientation, role);
 }
 
 bool DataProxyModel::isFiltered(int sourceRow) const
@@ -190,9 +189,15 @@ void DataProxyModel::load(const string& file)
     }
     string line;
     while (getline(prefs, line)) {
-        auto kv = Utils::split(line, '=');
-        if (kv.size() < 2) continue;    // Default value for key without value
-        DebugLog(AppLogger) << "Load " << kv[0] << " = " << kv[1] << endl;
+        // split line into key=val - this allow = in the filter text (e.g filter.ssid.text=SomeSsid=)
+        vector<string> kv;
+        auto pos = line.find('=');
+        if (pos == string::npos) continue;    // Default value for key without value
+        if (pos + 1 >= line.length()) continue;
+        kv.push_back(line.substr(0, pos));
+        kv.push_back(line.substr(pos+1));
+
+        DebugLog(AppLogger) << "Load " << kv[0] << "=" << kv[1] << endl;
         // @TODO: Use tag dispatcher to set corresponding value
         if (kv[0] == "filter.band") impl_->state.byBand = (kv[1] == "0") ? false : true;
         else if (kv[0] == "filter.band.2g") impl_->state.showBand24G = (kv[1] == "0") ? false : true;
