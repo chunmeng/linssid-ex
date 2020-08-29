@@ -70,7 +70,7 @@ Use `pgp --generate-key` to generate one if needed.
 ```
 debuild -B
 ```
-The package is output to: `../linssid_3.6-extubuntu1_amd64.deb`
+The package is output to: `../<version>_ubuntu1_amd64.deb`
 
 ### Clean up
 

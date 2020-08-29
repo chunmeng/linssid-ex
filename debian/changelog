@@ -1,3 +1,9 @@
+linssid (3.6-ext2) bionic; urgency=low
+
+  * Added persistent filter setting
+
+ -- chunmeng <chunmeng@yahoo.com>  Sat, 29 Aug 2020 14:28:30 +0800
+
 linssid (3.6-ext) bionic; urgency=low
 
   * Added view filters by band, channel, SSID and MAC
