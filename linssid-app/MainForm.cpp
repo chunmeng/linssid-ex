@@ -62,7 +62,7 @@ extern string pipeName;
 extern runStates runstate;
 extern int realUID;
 extern struct passwd *realUser;
-extern string fullPrefsName;
+extern string storageDir;
 extern Logger AppLogger;
 
 extern string genPipeName(int);
@@ -156,6 +156,7 @@ MainForm::MainForm() {
             QString("Plot|SSID|MAC|Channel|Mode|Security|Privacy|Cipher|Frequency\
 |Quality|Signal|Load|Station Count|BW MHz|Min Sig|Max Sig|Cen Chan|First Seen|Last Seen|Vendor|Protocol|Type").split("|"));
     proxyModel_ = make_unique<DataProxyModel>();
+    proxyModel_->load(storageDir + string(FILTER_PREFS_FILE_NAME));
     proxyModel_->setSourceModel(model_.get());
     mainFormWidget.mainTableView->setModel(proxyModel_.get());
 
@@ -189,8 +190,7 @@ void MainForm::init() {
     MainForm::drawChan24Plot();
     MainForm::drawChan5Plot();
     MainForm::drawTimePlot();
-    extern string fullLogName;
-    dataLogger_ = make_unique<DataLogger>(fullLogName);
+    dataLogger_ = make_unique<DataLogger>(storageDir + string(LOG_DATA_FILE_NAME));
     vendorDb_ = make_unique<VendorDb>();
 }
 
@@ -374,6 +374,7 @@ void MainForm::savePrefs() {
 }
 
 void MainForm::loadPrefs() {
+    string fullPrefsName = storageDir + string(PREFS_FILE_NAME);
     if (!prefsHandler_) prefsHandler_ = make_unique<PrefsHandler>(fullPrefsName);
     PrefsHandler::sDefPref appPref = prefsHandler_->load();
 
@@ -550,6 +551,7 @@ void MainForm::closeEvent(QCloseEvent * event) {
     pGetterThread->QThread::quit();
     cellDataRay_.clear();
     savePrefs();
+    if (proxyModel_) proxyModel_->save(storageDir + string(FILTER_PREFS_FILE_NAME));
     pGetterThread->QThread::wait();
     mainFormWidget.statusTxt->setText("Closing ...");
     mainFormWidget.statusTxt->repaint();

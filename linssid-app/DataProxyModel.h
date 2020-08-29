@@ -36,6 +36,8 @@ public:
                         int role) const;
     bool isFiltered(int sourceRow) const;
     const FilterState& getFilter();
+    void load(const std::string& file);
+    void save(const std::string& file);
 
 public slots:
     void setFilter(const FilterState& state);

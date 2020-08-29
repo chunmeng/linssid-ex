@@ -174,3 +174,13 @@ bool DataProxyModel::isFiltered(int sourceRow) const
         return true;
     return false;
 }
+
+void DataProxyModel::load(const std::string& file)
+{
+    InfoLog(AppLogger) << "Load filters from " << file << endl;
+}
+
+void DataProxyModel::save(const std::string& file)
+{
+    InfoLog(AppLogger) << "Save filters to " << file << endl;
+}
