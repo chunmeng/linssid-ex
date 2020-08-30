@@ -24,7 +24,6 @@ The initial source is based on LinSSID 3.6. (https://sourceforge.net/projects/li
 - Enhancement: textbox editing with validator is arkward (only allow 1 char change at a time)
 - Enhancement: Add a button to flush/reset history (to clear out AP not seen for a long time)
 - Enhancement: List BSSID as dropdown in MAC filter?
-- Release: Try make a deb package
 
 ## Build Requirement
 
@@ -48,3 +47,40 @@ For UI layout change, consider using Qt designer
 ```
 sudo apt-get install qttools5-dev-tools
 ```
+
+## Packaging
+
+### Unsigned
+To package the unsigned deb, without consideration for release to any public ppa.
+```
+debuild -B -us -uc
+```
+The package is generated under ../ and can be installed by `sudo dpkg -i <PKG_DEB>` or via Software center.
+
+__Note__ The package will conflict with original linssid package.
+If failed to install, the existing linssid should be removed first.
+`sudo apt remove linssid`
+
+### Signed
+
+To build a signed package as a maintainer, update `debian/changelog` with the entries for the new version.
+You must have the pgp key for the latest email in the changelog.
+Use `pgp --generate-key` to generate one if needed.
+
+```
+debuild -B
+```
+The package is output to: `../<version>_ubuntu1_amd64.deb`
+
+### Clean up
+
+Clean up intermediate files
+```
+dh clean
+```
+
+### Reference
+- https://www.debian.org/doc/manuals/maint-guide/dreq.en.html
+- https://www.debian.org/doc/manuals/maint-guide/build.en.html
+- https://help.launchpad.net/Packaging/PPA/BuildingASourcePackage
+- https://askubuntu.com/questions/737884/debuild-secret-key-not-available-someone-elses-key
