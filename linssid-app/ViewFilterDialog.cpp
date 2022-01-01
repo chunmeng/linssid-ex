@@ -6,6 +6,7 @@
 #include "ViewFilterDialog.h"
 #include "CustomEvent.h"
 #include "Logger.h"
+#include <QRegExpValidator>
 
 using namespace std;
 extern Logger AppLogger;
