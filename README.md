@@ -27,6 +27,8 @@ The initial source is based on LinSSID 3.6. (https://sourceforge.net/projects/li
 
 ## Build Requirement
 
+### Debian/Ubuntu
+
 Install deps and build according to instruction in linssid-app/INSTALL.txt
 
 ```
@@ -39,6 +41,26 @@ sudo apt-get install -y \
 	libqt5opengl5-dev \
 	libqwt-qt5-6 \
 	libqwt-headers
+```
+
+### Fedora
+
+Install deps (no need to install weak deps):
+
+```
+sudo dnf -y --setopt=install_weak_deps=False install \
+	boost-devel \
+	qt5-qtbase-devel \
+	qt5-qtsvg-devel \
+	qwt-qt5-devel
+```
+
+Build:
+
+```
+qmake-qt5
+make
+sudo make install
 ```
 
 ## UI change

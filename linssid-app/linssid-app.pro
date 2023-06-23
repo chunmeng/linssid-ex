@@ -22,7 +22,7 @@ INCLUDEPATH += /usr/include/boost
 INCLUDEPATH += /usr/include/qt5
 INCLUDEPATH += /usr/include/qwt
 LIBS += -lboost_regex
-LIBS += /usr/lib/libqwt-qt5.so.6
+LIBS += -lqwt-qt5
 QMAKE_CXXFLAGS += -std=c++17
 #
 TARGET = linssid
@@ -44,3 +44,5 @@ policy.path = /usr/share/polkit-1/actions
 policy.files = com.warsev.pkexec.linssid.policy
 INSTALLS += policy
 
+# Fedora-specific config
+INCLUDEPATH += /usr/include/qt5/qwt/
